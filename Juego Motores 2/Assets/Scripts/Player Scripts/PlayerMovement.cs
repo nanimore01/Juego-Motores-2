@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using System;
 
-public class PlayerMovement : MonoBehaviour
+public class PlayerMovement : MonoBehaviour, IFPPMovement
 {
 
     float _horizontalInput;
@@ -36,19 +36,25 @@ public class PlayerMovement : MonoBehaviour
     {
         _pj.MovementFixedUpdate.AddListener(FixedUpdateAction);
         _pj.NormalUpdate.AddListener(UpdateAction);
+        
     }
 
     public void OnDisable()
     {
         _pj.MovementFixedUpdate.RemoveListener(FixedUpdateAction);
         _pj.NormalUpdate.RemoveListener(UpdateAction);
+        
     }
 
     public void UpdateAction()
     {
+        print("Update Action");
         SpeedControl();
         _horizontalInput = Input.GetAxisRaw("Horizontal");
         _verticalInput = Input.GetAxisRaw("Vertical");
+
+
+        print(_horizontalInput + "," + _verticalInput);
     }
 
     public void FixedUpdateAction()
@@ -59,12 +65,14 @@ public class PlayerMovement : MonoBehaviour
 
     public void Movement(float moveHorizontal, float moveVertical)
     {
+        
         Vector3 movement = (transform.forward * moveVertical + transform.right * moveHorizontal).normalized;
         _movementSpeed = _normalSpeed;
         _rb.AddForce(movement.normalized * _movementSpeed * 10f, ForceMode.Force);
 
         if (moveHorizontal != 0 || moveVertical != 0)
         {
+            print("Funciono");
             OnPlayerMove?.Invoke(moveHorizontal, moveVertical);
         }
         else
@@ -73,7 +81,7 @@ public class PlayerMovement : MonoBehaviour
 
     public void OnPlayerMoved(float horizontalAxis, float verticalAxis)
     {
-
+        
     }
 
     public void OnPlayerStop()

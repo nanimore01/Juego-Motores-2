@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using System;
 
-public class FirstPersonPlayer : Entity
+public class FirstPersonPlayer : Entity, IFPPlayer
 {
     [SerializeField] Rigidbody _rb;
 
@@ -19,7 +19,9 @@ public class FirstPersonPlayer : Entity
     void Start()
     {
         _currHp = _maxHP;
-        OnDied.AddListener(OnDead);
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
+        //OnDied.AddListener(OnDead);
     }
 
     // Update is called once per frame
@@ -34,7 +36,10 @@ public class FirstPersonPlayer : Entity
             Rotation(_inputMouseX, _inputMouseY);
         }
     }
-
+    void FixedUpdate()
+    {
+        MovementFixedUpdate?.Invoke();
+    }
     public void OnDead()
     {
         
