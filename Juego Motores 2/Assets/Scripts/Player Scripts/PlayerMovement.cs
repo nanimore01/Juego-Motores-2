@@ -79,12 +79,9 @@ public class PlayerMovement : MonoBehaviour
 
     public void Movement(float moveHorizontal, float moveVertical)
     {
-        
         Vector3 movement = (transform.forward * moveVertical + transform.right * moveHorizontal).normalized;
         
         _rb.AddForce(movement.normalized * _movementSpeed * 10f, ForceMode.Force);
-
-        
     }
 
     private void SpeedControl()
