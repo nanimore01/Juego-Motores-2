@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using System;
 
-public class PlayerMovement : MonoBehaviour, IFPPMovement
+public class PlayerMovement : MonoBehaviour
 {
 
     float _horizontalInput;
@@ -13,23 +13,16 @@ public class PlayerMovement : MonoBehaviour, IFPPMovement
     FirstPersonPlayer _pj;
     Rigidbody _rb;
     [SerializeField] float _movementSpeed;
-    [SerializeField] float _normalSpeed;
+    [SerializeField] float _normalSpeed, _walkSpeed;
     [SerializeField] float dampingFactor = 10f;
 
-
-    float prueba;
-
-    public event Action<float, float> OnPlayerMove;
-    public event Action OnPlayerStoped;
-
+    IState currentState;
     public void Awake()
     {
         _pj = gameObject.GetComponent<FirstPersonPlayer>();
         _rb = gameObject.GetComponent<Rigidbody>();
 
-
-        OnPlayerMove += OnPlayerMoved;
-        OnPlayerStoped += OnPlayerStop;
+        ChangeState(new PlayerStopState(this));
     }
 
     public void OnEnable()
@@ -48,14 +41,35 @@ public class PlayerMovement : MonoBehaviour, IFPPMovement
 
     public void UpdateAction()
     {
-        print("Update Action");
         SpeedControl();
         _horizontalInput = Input.GetAxisRaw("Horizontal");
         _verticalInput = Input.GetAxisRaw("Vertical");
 
+        bool isMoving = (_horizontalInput != 0 || _verticalInput != 0);
+        //print(_horizontalInput + "," + _verticalInput);
 
-        print(_horizontalInput + "," + _verticalInput);
+        if (!isMoving)
+        {
+            if (!(currentState is PlayerStopState))
+                ChangeState(new PlayerStopState(this));
+        }
+        else if (Input.GetKey(KeyCode.LeftShift))
+        {
+            _movementSpeed = _walkSpeed;
+            if (!(currentState is PlayerWalkState))
+                ChangeState(new PlayerWalkState(this));
+        }
+        else
+        {
+            _movementSpeed = _normalSpeed;
+            if (!(currentState is PlayerRunState))
+                ChangeState(new PlayerRunState(this));
+        }
+
+        currentState?.OnUpdate();
     }
+
+    
 
     public void FixedUpdateAction()
     {
@@ -67,26 +81,10 @@ public class PlayerMovement : MonoBehaviour, IFPPMovement
     {
         
         Vector3 movement = (transform.forward * moveVertical + transform.right * moveHorizontal).normalized;
-        _movementSpeed = _normalSpeed;
+        
         _rb.AddForce(movement.normalized * _movementSpeed * 10f, ForceMode.Force);
 
-        if (moveHorizontal != 0 || moveVertical != 0)
-        {
-            print("Funciono");
-            OnPlayerMove?.Invoke(moveHorizontal, moveVertical);
-        }
-        else
-            OnPlayerStoped?.Invoke();
-    }
-
-    public void OnPlayerMoved(float horizontalAxis, float verticalAxis)
-    {
         
-    }
-
-    public void OnPlayerStop()
-    {
-        //
     }
 
     private void SpeedControl()
@@ -102,5 +100,12 @@ public class PlayerMovement : MonoBehaviour, IFPPMovement
         {
             _rb.velocity = Vector3.Lerp(_rb.velocity, new Vector3(0, _rb.velocity.y, 0), Time.deltaTime * dampingFactor);
         }
+    }
+
+    void ChangeState(IState newState)
+    {
+        currentState?.OnExit();
+        currentState = newState;
+        currentState.OnEnter();
     }
 }

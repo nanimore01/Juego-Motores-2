@@ -206,6 +206,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _movementSpeed: 10
   _normalSpeed: 10
+  _walkSpeed: 2.5
   dampingFactor: 10
 --- !u!114 &4930588280706198497
 MonoBehaviour:
