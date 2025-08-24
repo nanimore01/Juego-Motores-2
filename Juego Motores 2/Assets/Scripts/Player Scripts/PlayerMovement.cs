@@ -16,11 +16,19 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] float _normalSpeed, _walkSpeed;
     [SerializeField] float dampingFactor = 10f;
 
+    [SerializeField] AudioSource audioSource;
+
+    [SerializeField] AudioClip _runSound;
+
     IState currentState;
     public void Awake()
     {
         _pj = gameObject.GetComponent<FirstPersonPlayer>();
         _rb = gameObject.GetComponent<Rigidbody>();
+
+        EventManager.player.OnStartRunning += RunningSound;
+        EventManager.player.OnStopRunning += OnStop;
+
 
         ChangeState(new PlayerStopState(this));
     }
@@ -97,6 +105,19 @@ public class PlayerMovement : MonoBehaviour
         {
             _rb.velocity = Vector3.Lerp(_rb.velocity, new Vector3(0, _rb.velocity.y, 0), Time.deltaTime * dampingFactor);
         }
+    }
+
+    public void RunningSound()
+    {
+        audioSource.loop = true;
+        audioSource.clip = _runSound;
+        audioSource.Play();
+    }
+
+    public void OnStop()
+    {
+        audioSource.loop = false;
+        audioSource.Stop();
     }
 
     void ChangeState(IState newState)

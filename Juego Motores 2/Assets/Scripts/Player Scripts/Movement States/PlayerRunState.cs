@@ -15,7 +15,7 @@ public class PlayerRunState : IState
     public void OnEnter()
     {
         Debug.Log("Start Running");
-
+        EventManager.player.OnStartRunning?.Invoke();
         
     }
 

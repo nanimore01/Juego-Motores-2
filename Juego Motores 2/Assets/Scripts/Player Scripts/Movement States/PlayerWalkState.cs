@@ -24,6 +24,6 @@ public class PlayerWalkState : IState
 
     public void OnUpdate()
     {
-        
+        EventManager.player.OnWalking?.Invoke();
     }
 }

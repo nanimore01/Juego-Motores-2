@@ -16,6 +16,7 @@ public static class EventManager
     public class PlayerEvents
     {
         public UnityAction OnStartWalking;
+        public UnityAction OnStartRunning;
 
         public UnityAction OnRun;
         public UnityAction OnWalking;
