@@ -75,6 +75,7 @@ public class PlayerMovement : MonoBehaviour
         }
 
         currentState?.OnUpdate();
+        EventManager.player.PlayerPosition(transform.position);
     }
 
     

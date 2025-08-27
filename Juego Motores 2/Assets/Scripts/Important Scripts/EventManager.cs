@@ -22,6 +22,9 @@ public static class EventManager
         public UnityAction OnWalking;
 
         public UnityAction OnStopRunning;
+
+        public UnityAction<Vector3> OnLastPositionHeard;
+        public UnityAction<Vector3> PlayerPosition;
     }
 
     
