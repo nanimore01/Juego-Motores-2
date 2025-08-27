@@ -11,6 +11,8 @@ public class EnemyBasic : Entity
     public GameObject POV;
     [SerializeField] protected LayerMask _wallLayer;
 
+    [SerializeField] float _viewRadius;
+    [SerializeField] float _viewAngle, _hearRadius;
     public UnityAction<Vector3> OnHeardPlayer;
 
     public void Awake()
@@ -28,7 +30,7 @@ public class EnemyBasic : Entity
     {
         var dir = playerPosition - transform.position;
 
-        if(dir.magnitude < stats.hearRadius)
+        if(dir.magnitude < _hearRadius)
         {
             OnHeardPlayer?.Invoke(playerPosition);
         }
@@ -51,9 +53,9 @@ public class EnemyBasic : Entity
     {
         var dir = obj - transform.position;
 
-        if (dir.magnitude < stats.viewRadius)
+        if (dir.magnitude < _viewRadius)
         {
-            if (Vector3.Angle(transform.forward, dir) <= stats.viewAngle * 0.5f)
+            if (Vector3.Angle(transform.forward, dir) <= _viewAngle * 0.5f)
             {
                 return InLineOfSight(POV.transform.position, obj);
             }
@@ -68,9 +70,8 @@ public struct EnemyStats
 {
     public float maxForce;
     public float maxVelocity;
-    public float viewRadius;
     public float hearRadius;
-    public float viewAngle;
+    public Node[] nodePatrol;
 }
 
 [System.Serializable]
