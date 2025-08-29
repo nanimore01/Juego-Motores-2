@@ -13,6 +13,7 @@ public class EnemyPatrolState : IState
     Node[] _patrol;
     int _currWaypoint = 0;
 
+    Vector3 _pj;
     public EnemyPatrolState(EnemyBasic me, FSM fsm, EnemyStats stats)
     {
         _me = me;
@@ -26,12 +27,16 @@ public class EnemyPatrolState : IState
 
     public void OnEnter()
     {
-        
+        EventManager.player.PlayerPosition += GetPlayerPosition;
+        _me.OnHeardPlayer += OnHeardPlayer;
+        _me.OnSpotedPlayer += OnSpotPlayer;
     }
 
     public void OnExit()
     {
-        
+        EventManager.player.PlayerPosition -= GetPlayerPosition;
+        _me.OnHeardPlayer -= OnHeardPlayer;
+        _me.OnSpotedPlayer -= OnSpotPlayer;
     }
 
     public void OnUpdate()
@@ -48,6 +53,39 @@ public class EnemyPatrolState : IState
 
         _me.transform.position += _velocity * Time.deltaTime;
         _me.transform.forward = _velocity;
+
+
+        if(_me.InFOV(_pj))
+        {
+            Debug.Log("Veo al jugador");
+            _me.StartReactionTime();
+        }
+        else
+        {
+            _me.ResetReactionTime();
+        }
+    }
+
+    public void GetPlayerPosition(Vector3 player)
+    {
+        _pj = player;
+    }
+
+    public void OnHeardPlayer()
+    {
+        if(_me.InFOV(_pj))
+        {
+            OnSpotPlayer();
+        }
+        else
+        {
+            
+        }
+    }
+
+    public void OnSpotPlayer()
+    {
+        Debug.Log("Te detecte");
     }
 
     Vector3 Seek(Vector3 dir)

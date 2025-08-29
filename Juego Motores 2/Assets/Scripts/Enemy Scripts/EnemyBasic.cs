@@ -9,12 +9,16 @@ public class EnemyBasic : Entity
     [SerializeField] EnemyStats stats;
     [SerializeField] VoiceLines voiceLines;
     public GameObject POV;
-    [SerializeField] protected LayerMask _wallLayer;
+    
+
+    public List<Node> path;
 
     [SerializeField] float _viewRadius;
     [SerializeField] float _viewAngle, _hearRadius;
-    public UnityAction<Vector3> OnHeardPlayer;
-
+    public UnityAction OnHeardPlayer;
+    public UnityAction<float> progressOfSpotReaction;
+    public UnityAction OnSpotedPlayer;
+    CountdownTimer _reactionTimer;
     public void Awake()
     {
         _currHp = _maxHP;
@@ -22,9 +26,17 @@ public class EnemyBasic : Entity
         _fsm = new FSM();
 
         EventManager.player.OnLastPositionHeard += Audition;
+
+        _reactionTimer = new CountdownTimer(stats.reactionTime);
+
+        _reactionTimer.OnTimerStop += OnSpotPlayer;
     }
 
-    
+    public void Update()
+    {
+        _fsm.Execute();
+        _reactionTimer.Tick(Time.deltaTime);
+    }
 
     public void Audition(Vector3 playerPosition)  
     {
@@ -32,7 +44,7 @@ public class EnemyBasic : Entity
 
         if(dir.magnitude < _hearRadius)
         {
-            OnHeardPlayer?.Invoke(playerPosition);
+            OnHeardPlayer?.Invoke();
         }
     }
 
@@ -41,12 +53,26 @@ public class EnemyBasic : Entity
 
     }
 
+    public void StartReactionTime()
+    {
+        _reactionTimer.Start();
+    }
+
+    public void ResetReactionTime()
+    {
+        _reactionTimer.Reset();
+    }
+
+    public void OnSpotPlayer()
+    {
+        OnSpotedPlayer.Invoke();
+    }
 
     public bool InLineOfSight(Vector3 start, Vector3 end)
     {
         var dir = end - start;
 
-        return !Physics.Raycast(start, dir, dir.magnitude, _wallLayer);
+        return !Physics.Raycast(start, dir, dir.magnitude, stats.wallLayer);
     }
 
     public bool InFOV(Vector3 obj)
@@ -63,15 +89,116 @@ public class EnemyBasic : Entity
 
         return false;
     }
+
+    public List<Node> CalculateAStar(Node startingNode, Node goalNode)
+    {
+        PriorityQueue<Node> frontier = new PriorityQueue<Node>();
+        frontier.Enqueue(startingNode, 0);
+
+        Dictionary<Node, Node> cameFrom = new Dictionary<Node, Node>();
+        cameFrom.Add(startingNode, null);
+
+        Dictionary<Node, int> costSoFar = new Dictionary<Node, int>();
+        costSoFar.Add(startingNode, 0);
+
+        while (frontier.Count > 0)
+        {
+            Node current = frontier.Dequeue();
+
+            if (current == goalNode)
+            {
+                List<Node> path = new List<Node>();
+
+                while (current != startingNode)
+                {
+                    path.Add(current);
+                    current = cameFrom[current];
+                }
+
+                path.Reverse();
+                return path;
+            }
+
+            foreach (var item in current.neighbour)
+            {
+
+
+                int newCost = costSoFar[current] + item.cost;
+                float priority = newCost + Vector3.Distance(item.transform.position, goalNode.transform.position);
+
+                if (!costSoFar.ContainsKey(item))
+                {
+                    if (!frontier.ContainsKey(item))
+                        frontier.Enqueue(item, priority);
+                    cameFrom.Add(item, current);
+                    costSoFar.Add(item, newCost);
+                }
+                else if (costSoFar[item] > newCost)
+                {
+                    if (!frontier.ContainsKey(item))
+                        frontier.Enqueue(item, priority);
+                    cameFrom[item] = current;
+                    costSoFar[item] = newCost;
+                }
+            }
+        }
+        return new List<Node>();
+    }
+
+    public List<Node> CalculateThetaStar(Node startingNode, Node goalNode)
+    {
+        var listNode = CalculateAStar(startingNode, goalNode);
+
+        int current = 0;
+
+        while (current + 2 < listNode.Count)
+        {
+            if (InLineOfSight(listNode[current].transform.position, listNode[current + 2].transform.position))
+            {
+                listNode.RemoveAt(current + 1);
+            }
+            else
+                current++;
+        }
+
+        return listNode;
+    }
+
+    public void SetPath(List<Node> newPath)
+    {
+
+        path.Clear();
+
+        foreach (var item in newPath)
+        {
+            print("Agrego item a la lista");
+            path.Add(item);
+        }
+
+        
+    }
 }
 
 [System.Serializable]
 public struct EnemyStats
 {
+    [Header("Speed Stats")]
     public float maxForce;
     public float maxVelocity;
+    
+    
+    [Header("Detection Stats")]
     public float hearRadius;
+    public float reactionTime;
+    public float detectionDistance;
+
+    [Header("Behavior settings")]
+    public float avoidanceStrength;
+
+    [Header("Settings")]
     public Node[] nodePatrol;
+    public LayerMask wallLayer;
+    
 }
 
 [System.Serializable]

@@ -35,6 +35,8 @@ public class FirstPersonPlayer : Entity, IFPPlayer
         {
             Rotation(_inputMouseX, _inputMouseY);
         }
+
+        
     }
     void FixedUpdate()
     {

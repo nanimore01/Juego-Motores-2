@@ -1541,9 +1541,19 @@ MonoBehaviour:
   stats:
     maxForce: 2
     maxVelocity: 2
-    viewRadius: 180
-    viewAngle: 0
+    hearRadius: 0
+    reactionTime: 1
+    detectionDistance: 0
+    avoidanceStrength: 0
+    nodePatrol: []
+    wallLayer:
+      serializedVersion: 2
+      m_Bits: 0
   POV: {fileID: 1552840612}
+  path: []
+  _viewRadius: 5
+  _viewAngle: 180
+  _hearRadius: 10
 --- !u!4 &1590798141
 Transform:
   m_ObjectHideFlags: 0
@@ -1576,6 +1586,10 @@ PrefabInstance:
     - target: {fileID: 420768954253911469, guid: 6b209e6f3d7140c4fbbe4e7deb4e745f, type: 3}
       propertyPath: m_Name
       value: Player
+      objectReference: {fileID: 0}
+    - target: {fileID: 4930588280706198497, guid: 6b209e6f3d7140c4fbbe4e7deb4e745f, type: 3}
+      propertyPath: m_Enabled
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4930588280706198497, guid: 6b209e6f3d7140c4fbbe4e7deb4e745f, type: 3}
       propertyPath: weapons.Array.data[0]
