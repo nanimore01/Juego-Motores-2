@@ -9,7 +9,9 @@ public class EnemyBasic : Entity
     [SerializeField] EnemyStats stats;
     [SerializeField] VoiceLines voiceLines;
     public GameObject POV;
-    
+
+    public float Horizontal, Vertical;
+
 
     public List<Node> path;
 
@@ -25,6 +27,9 @@ public class EnemyBasic : Entity
 
         _fsm = new FSM();
 
+        _fsm.CreateState("Patrol", new EnemyPatrolState(this, _fsm, stats));
+
+        _fsm.ChangeState("Patrol");
         EventManager.player.OnLastPositionHeard += Audition;
 
         _reactionTimer = new CountdownTimer(stats.reactionTime);
@@ -65,6 +70,8 @@ public class EnemyBasic : Entity
 
     public void OnSpotPlayer()
     {
+        _reactionTimer.Stop();
+
         OnSpotedPlayer.Invoke();
     }
 
@@ -185,6 +192,7 @@ public struct EnemyStats
     [Header("Speed Stats")]
     public float maxForce;
     public float maxVelocity;
+    public float rotationSpeed;
     
     
     [Header("Detection Stats")]
@@ -197,6 +205,8 @@ public struct EnemyStats
 
     [Header("Settings")]
     public Node[] nodePatrol;
+    public Animator animator;
+    public GameObject pointing;
     public LayerMask wallLayer;
     
 }

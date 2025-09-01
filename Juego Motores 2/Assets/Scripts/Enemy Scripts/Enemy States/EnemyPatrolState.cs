@@ -9,9 +9,10 @@ public class EnemyPatrolState : IState
     EnemyStats _stats;
 
     Vector3 _velocity;
-    float _maxVelocity, _maxForce;
+    float _maxVelocity, _maxForce, _rotationSpeed;
     Node[] _patrol;
     int _currWaypoint = 0;
+    Animator _animator;
 
     Vector3 _pj;
     public EnemyPatrolState(EnemyBasic me, FSM fsm, EnemyStats stats)
@@ -22,14 +23,16 @@ public class EnemyPatrolState : IState
 
         _maxVelocity = _stats.maxVelocity;
         _maxForce = _stats.maxForce;
-
+        _patrol = _stats.nodePatrol;
+        _animator = _stats.animator;
+        _rotationSpeed = _stats.rotationSpeed;
     }
 
     public void OnEnter()
     {
-        EventManager.player.PlayerPosition += GetPlayerPosition;
-        _me.OnHeardPlayer += OnHeardPlayer;
-        _me.OnSpotedPlayer += OnSpotPlayer;
+        //EventManager.player.PlayerPosition += GetPlayerPosition;
+        //_me.OnHeardPlayer += OnHeardPlayer;
+        //_me.OnSpotedPlayer += OnSpotPlayer;
     }
 
     public void OnExit()
@@ -41,7 +44,13 @@ public class EnemyPatrolState : IState
 
     public void OnUpdate()
     {
-        AddForce(Seek(_patrol[_currWaypoint].transform.position));
+        Vector3 nodo = new Vector3(_patrol[_currWaypoint].transform.position.x, _me.transform.position.y, _patrol[_currWaypoint].transform.position.z);
+
+        AddForce(Seek(nodo));
+        //AddForce(Seek(_patrol[_currWaypoint].transform.position));
+
+        //_animator.SetFloat("Horizontal", _patrol[_currWaypoint].transform.position.x);
+        //_animator.SetFloat("Vertical", _patrol[_currWaypoint].transform.position.y);
 
         if (Vector3.Distance(_patrol[_currWaypoint].transform.position, _me.transform.position) <= 0.5f)
         {
@@ -51,19 +60,40 @@ public class EnemyPatrolState : IState
                 _currWaypoint = 0;
         }
 
+        //_me.transform.position += _velocity * Time.deltaTime;
+        //_me.transform.forward = _velocity;
+
+
         _me.transform.position += _velocity * Time.deltaTime;
-        _me.transform.forward = _velocity;
 
+        // Rotación suavizada
+        if (_velocity.sqrMagnitude > 0.01f)
+        {
+            Quaternion targetRot = Quaternion.LookRotation(_velocity.normalized);
+            _me.transform.rotation = Quaternion.Slerp(
+                _me.transform.rotation,
+                targetRot,
+                _rotationSpeed * Time.deltaTime
+            );
+        }
 
-        if(_me.InFOV(_pj))
-        {
-            Debug.Log("Veo al jugador");
-            _me.StartReactionTime();
-        }
-        else
-        {
-            _me.ResetReactionTime();
-        }
+        Vector3 localVel = _me.transform.InverseTransformDirection(_velocity);
+
+        _animator.SetFloat("Horizontal", Mathf.Clamp(localVel.x, -1, 1));
+        _animator.SetFloat("Vertical", Mathf.Clamp(localVel.z, -1, 1));
+
+        _me.Horizontal = Mathf.Clamp(localVel.x, -1, 1);
+        _me.Vertical = Mathf.Clamp(localVel.z, -1, 1);
+
+        //if(_me.InFOV(_pj))
+        //{
+        //    Debug.Log("Veo al jugador");
+        //    _me.StartReactionTime();
+        //}
+        //else
+        //{
+        //    _me.ResetReactionTime();
+        //}
     }
 
     public void GetPlayerPosition(Vector3 player)
