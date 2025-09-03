@@ -9,6 +9,7 @@ public class EnemyBasic : Entity
     [SerializeField] EnemyStats stats;
     [SerializeField] VoiceLines voiceLines;
     public GameObject POV;
+    
 
     public float Horizontal, Vertical;
 
@@ -21,8 +22,12 @@ public class EnemyBasic : Entity
     public UnityAction<float> progressOfSpotReaction;
     public UnityAction OnSpotedPlayer;
     CountdownTimer _reactionTimer;
+    Rigidbody _rb;
+    float _dampingFactor = 10;
     public void Awake()
     {
+        _rb = gameObject.GetComponent<Rigidbody>();
+
         _currHp = _maxHP;
 
         _fsm = new FSM();
@@ -41,6 +46,8 @@ public class EnemyBasic : Entity
     {
         _fsm.Execute();
         _reactionTimer.Tick(Time.deltaTime);
+
+        SpeedControl();
     }
 
     public void Audition(Vector3 playerPosition)  
@@ -74,8 +81,38 @@ public class EnemyBasic : Entity
 
         OnSpotedPlayer.Invoke();
     }
+    public void Move(Vector3 direction)
+    {
+        
+        _rb.AddForce(direction.normalized * stats.maxVelocity * 10f, ForceMode.Force);
 
-    public bool InLineOfSight(Vector3 start, Vector3 end)
+        // Limitar la velocidad
+        SpeedControl();
+    }
+
+    private void SpeedControl()
+    {
+        // Velocidad en el plano XZ
+        Vector3 flatVel = new Vector3(_rb.velocity.x, 0f, _rb.velocity.z);
+
+        // Limitar la magnitud a la velocidad máxima
+        if (flatVel.magnitude > stats.maxVelocity)
+        {
+            Vector3 limitedVel = flatVel.normalized * stats.maxVelocity;
+            _rb.velocity = new Vector3(limitedVel.x, _rb.velocity.y, limitedVel.z);
+        }
+        else
+        {
+            // Frenado suave cuando no hay input
+            _rb.velocity = Vector3.Lerp(
+                _rb.velocity,
+                new Vector3(0, _rb.velocity.y, 0),
+                Time.deltaTime * _dampingFactor
+            );
+        }
+    }
+
+public bool InLineOfSight(Vector3 start, Vector3 end)
     {
         var dir = end - start;
 

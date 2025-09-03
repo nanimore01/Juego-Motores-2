@@ -13,7 +13,7 @@ public class EnemyPatrolState : IState
     Node[] _patrol;
     int _currWaypoint = 0;
     Animator _animator;
-
+    Rigidbody _rb;
     Vector3 _pj;
     public EnemyPatrolState(EnemyBasic me, FSM fsm, EnemyStats stats)
     {
@@ -26,6 +26,8 @@ public class EnemyPatrolState : IState
         _patrol = _stats.nodePatrol;
         _animator = _stats.animator;
         _rotationSpeed = _stats.rotationSpeed;
+
+        _rb = _me.gameObject.GetComponent<Rigidbody>();
     }
 
     public void OnEnter()
@@ -46,7 +48,7 @@ public class EnemyPatrolState : IState
     {
         Vector3 nodo = new Vector3(_patrol[_currWaypoint].transform.position.x, _me.transform.position.y, _patrol[_currWaypoint].transform.position.z);
 
-        AddForce(Seek(nodo));
+        
         //AddForce(Seek(_patrol[_currWaypoint].transform.position));
 
         //_animator.SetFloat("Horizontal", _patrol[_currWaypoint].transform.position.x);
@@ -64,12 +66,24 @@ public class EnemyPatrolState : IState
         //_me.transform.forward = _velocity;
 
 
-        _me.transform.position += _velocity * Time.deltaTime;
+        //_me.transform.position += _velocity * Time.deltaTime;
 
-        // Rotación suavizada
-        if (_velocity.sqrMagnitude > 0.01f)
+        //// Rotación suavizada
+        //if (_velocity.sqrMagnitude > 0.01f)
+        //{
+        //    Quaternion targetRot = Quaternion.LookRotation(_velocity.normalized);
+        //    _me.transform.rotation = Quaternion.Slerp(
+        //        _me.transform.rotation,
+        //        targetRot,
+        //        _rotationSpeed * Time.deltaTime
+        //    );
+        //}
+
+        Vector3 dir = (nodo - _me.transform.position).normalized;
+
+        if (dir.sqrMagnitude > 0.01f)
         {
-            Quaternion targetRot = Quaternion.LookRotation(_velocity.normalized);
+            Quaternion targetRot = Quaternion.LookRotation(dir);
             _me.transform.rotation = Quaternion.Slerp(
                 _me.transform.rotation,
                 targetRot,
@@ -77,7 +91,9 @@ public class EnemyPatrolState : IState
             );
         }
 
-        Vector3 localVel = _me.transform.InverseTransformDirection(_velocity);
+        _me.Move(_me.transform.forward);
+
+        Vector3 localVel = _me.transform.InverseTransformDirection(_rb.velocity);
 
         _animator.SetFloat("Horizontal", Mathf.Clamp(localVel.x, -1, 1));
         _animator.SetFloat("Vertical", Mathf.Clamp(localVel.z, -1, 1));
@@ -100,6 +116,7 @@ public class EnemyPatrolState : IState
     {
         _pj = player;
     }
+
 
     public void OnHeardPlayer()
     {
