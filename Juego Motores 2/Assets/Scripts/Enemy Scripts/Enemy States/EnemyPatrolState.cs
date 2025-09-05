@@ -12,6 +12,7 @@ public class EnemyPatrolState : IState
     float _maxVelocity, _maxForce, _rotationSpeed;
     Node[] _patrol;
     int _currWaypoint = 0;
+    int _previousWaypoint;
     Animator _animator;
     Rigidbody _rb;
     Vector3 _pj;
@@ -47,37 +48,24 @@ public class EnemyPatrolState : IState
     public void OnUpdate()
     {
         Vector3 nodo = new Vector3(_patrol[_currWaypoint].transform.position.x, _me.transform.position.y, _patrol[_currWaypoint].transform.position.z);
+        var NextNode = _patrol[_currWaypoint];
+        var PreviousNode = _patrol[_previousWaypoint];
 
-        
-        //AddForce(Seek(_patrol[_currWaypoint].transform.position));
-
-        //_animator.SetFloat("Horizontal", _patrol[_currWaypoint].transform.position.x);
-        //_animator.SetFloat("Vertical", _patrol[_currWaypoint].transform.position.y);
-
-        if (Vector3.Distance(_patrol[_currWaypoint].transform.position, _me.transform.position) <= 0.5f)
+        if (Vector3.Distance(nodo, _me.transform.position) <= 0.5f)
         {
+            //PreviousNode.OnPatrolNode?.Invoke();
+
+            _previousWaypoint = _currWaypoint;
+            
             _currWaypoint++;
+
+            NextNode.OnNextPatrolNode?.Invoke();
 
             if (_currWaypoint >= _patrol.Length)
                 _currWaypoint = 0;
         }
 
-        //_me.transform.position += _velocity * Time.deltaTime;
-        //_me.transform.forward = _velocity;
-
-
-        //_me.transform.position += _velocity * Time.deltaTime;
-
-        //// Rotación suavizada
-        //if (_velocity.sqrMagnitude > 0.01f)
-        //{
-        //    Quaternion targetRot = Quaternion.LookRotation(_velocity.normalized);
-        //    _me.transform.rotation = Quaternion.Slerp(
-        //        _me.transform.rotation,
-        //        targetRot,
-        //        _rotationSpeed * Time.deltaTime
-        //    );
-        //}
+       
 
         Vector3 dir = (nodo - _me.transform.position).normalized;
 
@@ -91,7 +79,11 @@ public class EnemyPatrolState : IState
             );
         }
 
-        _me.Move(_me.transform.forward);
+        if(NextNode.CanContinue)
+        {
+            _me.Move(_me.transform.forward);
+        }
+        
 
         Vector3 localVel = _me.transform.InverseTransformDirection(_rb.velocity);
 

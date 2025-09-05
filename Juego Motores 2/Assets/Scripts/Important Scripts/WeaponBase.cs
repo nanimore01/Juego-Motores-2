@@ -44,7 +44,7 @@ public abstract class WeaponBase : MonoBehaviour, IWeapon
     public void Update()
     {
         _shotTimer.Tick(Time.deltaTime);
-        print(_shotTimer.Time);
+
     }
     public void OnClickUpBehavior()
     {
