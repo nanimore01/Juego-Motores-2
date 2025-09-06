@@ -7,7 +7,7 @@ public static class EventManager
 {
     public static readonly PlayerEvents player = new PlayerEvents();
     public static readonly EnemyEvents enemy = new EnemyEvents();
-
+    public static readonly ArenaEvents arena = new ArenaEvents();
     public class EnemyEvents
     {
         public UnityAction OnDead;
@@ -27,6 +27,10 @@ public static class EventManager
         public UnityAction<Vector3> PlayerPosition;
     }
 
+    public class ArenaEvents
+    {
+        public List<Node> ActiveNodes;
+    }
     
 
 }
