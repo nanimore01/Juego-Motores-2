@@ -45,9 +45,6 @@ public class EnemyAlertedState : IState
         _me.Move(_me.transform.forward);
         if (_me.path.Count > 0)
         {
-
-            
-
             if (_me.InLineOfSight(_me.POV.transform.position, _me.path[0].transform.position) == false)
             {
                 //_me.SetPath(_me.CalculateThetaStar(_me.GetMinNode(_me.transform.position), _me.GetMinNode(_point)));
@@ -60,7 +57,7 @@ public class EnemyAlertedState : IState
             }
         }
 
-        if (dir.sqrMagnitude > 1f)
+        if (dir.sqrMagnitude > .01f)
         {
             Quaternion targetRot = Quaternion.LookRotation(dir);
             _me.transform.rotation = Quaternion.Slerp(
