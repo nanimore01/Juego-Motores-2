@@ -33,6 +33,7 @@ public class EnemyBasic : Entity
         _fsm = new FSM();
 
         _fsm.CreateState("Patrol", new EnemyPatrolState(this, _fsm, stats));
+        _fsm.CreateState("Sound Heard", new EnemyAlertedState(this, _fsm, stats));
 
         _fsm.ChangeState("Patrol");
         EventManager.player.OnLastPositionHeard += Audition;
@@ -47,7 +48,7 @@ public class EnemyBasic : Entity
         _fsm.Execute();
         _reactionTimer.Tick(Time.deltaTime);
 
-        SpeedControl();
+        //SpeedControl();
     }
 
     public void Audition(Vector3 playerPosition)  
@@ -86,16 +87,16 @@ public class EnemyBasic : Entity
         
         _rb.AddForce(direction.normalized * stats.maxVelocity * 10f, ForceMode.Force);
 
-        // Limitar la velocidad
+        
         SpeedControl();
     }
 
     private void SpeedControl()
     {
-        // Velocidad en el plano XZ
+        
         Vector3 flatVel = new Vector3(_rb.velocity.x, 0f, _rb.velocity.z);
 
-        // Limitar la magnitud a la velocidad máxima
+        
         if (flatVel.magnitude > stats.maxVelocity)
         {
             Vector3 limitedVel = flatVel.normalized * stats.maxVelocity;
@@ -103,7 +104,6 @@ public class EnemyBasic : Entity
         }
         else
         {
-            // Frenado suave cuando no hay input
             _rb.velocity = Vector3.Lerp(
                 _rb.velocity,
                 new Vector3(0, _rb.velocity.y, 0),
@@ -220,6 +220,29 @@ public bool InLineOfSight(Vector3 start, Vector3 end)
         }
 
         
+    }
+
+    public Node GetMinNode(Vector3 position)
+    {
+        print("Funciono");
+        Node minNode = null;
+        float minDist = Mathf.Infinity;
+
+        for (int i = 0; i < EventManager.arena.ActiveNodes?.Count; i++)
+        {
+            if (InLineOfSight(EventManager.arena.ActiveNodes[i].transform.position, position))
+            {
+                if (Vector3.Distance(EventManager.arena.ActiveNodes[i].transform.position, position) < minDist)
+                {
+
+                    minNode = EventManager.arena.ActiveNodes[i];
+                    minDist = Vector3.Distance(EventManager.arena.ActiveNodes[i].transform.position, position);
+
+                }
+            }
+        }
+
+        return minNode;
     }
 }
 

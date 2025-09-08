@@ -9,6 +9,12 @@ public class ArenaManager : MonoBehaviour
 
     public UnityEvent OnStartArena;
 
+
+    public void Awake()
+    {
+        LoadNodes();
+    }
+
     public void StartArena()
     {
         OnStartArena?.Invoke();

@@ -27,5 +27,6 @@ public class PlayerRunState : IState
     public void OnUpdate()
     {
         EventManager.player.OnRun?.Invoke();
+        EventManager.player.OnLastPositionHeard?.Invoke(_me.transform.position);
     }
 }

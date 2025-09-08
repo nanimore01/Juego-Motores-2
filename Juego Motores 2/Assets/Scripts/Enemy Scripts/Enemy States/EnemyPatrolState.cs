@@ -34,7 +34,7 @@ public class EnemyPatrolState : IState
     public void OnEnter()
     {
         //EventManager.player.PlayerPosition += GetPlayerPosition;
-        //_me.OnHeardPlayer += OnHeardPlayer;
+        _me.OnHeardPlayer += OnHeardPlayer;
         //_me.OnSpotedPlayer += OnSpotPlayer;
     }
 
@@ -118,7 +118,7 @@ public class EnemyPatrolState : IState
         }
         else
         {
-            
+            _fsm.ChangeState("Sound Heard");
         }
     }
 
@@ -127,21 +127,4 @@ public class EnemyPatrolState : IState
         Debug.Log("Te detecte");
     }
 
-    Vector3 Seek(Vector3 dir)
-    {
-        var desired = dir - _me.transform.position;
-        desired.Normalize();
-        desired *= _maxVelocity;
-
-        var steering = desired - _velocity;
-        steering = Vector3.ClampMagnitude(steering, _maxForce);
-
-        return steering;
-    }
-    void AddForce(Vector3 dir)
-    {
-        _velocity += dir;
-
-        _velocity = Vector3.ClampMagnitude(_velocity, _maxVelocity);
-    }
 }
