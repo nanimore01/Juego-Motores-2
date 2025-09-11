@@ -1,47 +1,72 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 
-public class EnemyAlertedState : IState
+public class EnemyInspectState : IState
 {
-    EnemyBasic _me;
     FSM _fsm;
+    EnemyBasic _me;
     EnemyStats _stats;
+    Animator _animator;
     Rigidbody _rb;
 
     float _rotationSpeed;
 
-    Vector3 _point;
-    Animator _animator;
-    public EnemyAlertedState(EnemyBasic me, FSM fsm, EnemyStats stats)
+    CountdownTimer _inpectTimer;
+
+
+    UnityAction update;  
+    
+
+    public EnemyInspectState(FSM fsm, EnemyBasic me, EnemyStats stats)
     {
-        _me = me;
         _fsm = fsm;
+        _me = me;
         _stats = stats;
 
+        _inpectTimer = new CountdownTimer(_stats.inpectTime);
         _animator = _stats.animator;
         _rotationSpeed = _stats.rotationSpeed;
 
         _rb = _me.gameObject.GetComponent<Rigidbody>();
     }
 
-    
     public void OnEnter()
     {
-        Debug.Log("Alerted Mode");
-        EventManager.player.OnLastPositionHeard += SetPoint;
-        _me.SetPath(_me.CalculateThetaStar(_me.GetMinNode(_me.transform.position), _me.GetMinNode(_point)));
+        Debug.Log("Inspect Mode");
+        update = OnInspect;
+        _inpectTimer.Start();
+        _inpectTimer.OnTimerStop += OnStopInspect;
     }
 
     public void OnExit()
     {
-        EventManager.player.OnLastPositionHeard -= SetPoint;
+        
     }
 
     public void OnUpdate()
     {
+        update.Invoke(); 
+    }
+
+    public void OnInspect()
+    {
+        _inpectTimer.Tick(Time.deltaTime);
+        
+    }
+
+    public void OnStopInspect()
+    {
+        update = OnReturnPatrol;
+        _me.SetPath(_me.CalculateThetaStar(_me.GetMinNode(_me.transform.position), _me.GetMinNode(_stats.nodePatrol[0].transform.position)));
+    }
+
+    public void OnReturnPatrol()
+    {
         Vector3 posNode = new Vector3(_me.path[0].transform.position.x, _me.transform.position.y, _me.path[0].transform.position.z);
         var dir = posNode - _me.transform.position;
+
         if (_me.path.Count > 0)
         {
             if (_me.InLineOfSight(_me.POV.transform.position, _me.path[0].transform.position) == false)
@@ -49,7 +74,7 @@ public class EnemyAlertedState : IState
                 //_me.SetPath(_me.CalculateThetaStar(_me.GetMinNode(_me.transform.position), _me.GetMinNode(_point)));
             }
 
-            if (dir.magnitude <= 1f)
+            if (dir.magnitude <= .5f)
             {
                 Debug.Log("Choque con el nodo");
                 _me.path.RemoveAt(0);
@@ -65,11 +90,8 @@ public class EnemyAlertedState : IState
                 _rotationSpeed * Time.deltaTime
             );
         }
-        
-       
 
         _me.Move(_me.transform.forward);
-
 
         Vector3 localVel = _me.transform.InverseTransformDirection(_rb.velocity);
 
@@ -81,12 +103,7 @@ public class EnemyAlertedState : IState
 
         if (_me.path.Count == 0)
         {
-            _fsm.ChangeState("Inspect");
+            _fsm.ChangeState("Patrol");
         }
-    }
-
-    public void SetPoint(Vector3 position)
-    {
-        _point = position;
     }
 }

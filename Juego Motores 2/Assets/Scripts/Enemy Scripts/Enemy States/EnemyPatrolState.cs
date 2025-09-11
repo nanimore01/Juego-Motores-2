@@ -33,6 +33,7 @@ public class EnemyPatrolState : IState
 
     public void OnEnter()
     {
+        Debug.Log("Patrol Mode");
         //EventManager.player.PlayerPosition += GetPlayerPosition;
         _me.OnHeardPlayer += OnHeardPlayer;
         //_me.OnSpotedPlayer += OnSpotPlayer;
@@ -92,6 +93,11 @@ public class EnemyPatrolState : IState
 
         _me.Horizontal = Mathf.Clamp(localVel.x, -1, 1);
         _me.Vertical = Mathf.Clamp(localVel.z, -1, 1);
+
+        //if (_me.path.Count == 0)
+        //{
+        //    _fsm.ChangeState("Inspect");
+        //}
 
         //if(_me.InFOV(_pj))
         //{

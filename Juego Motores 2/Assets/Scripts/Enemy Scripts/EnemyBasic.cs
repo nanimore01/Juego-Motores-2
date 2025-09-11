@@ -34,6 +34,7 @@ public class EnemyBasic : Entity
 
         _fsm.CreateState("Patrol", new EnemyPatrolState(this, _fsm, stats));
         _fsm.CreateState("Sound Heard", new EnemyAlertedState(this, _fsm, stats));
+        _fsm.CreateState("Inspect", new EnemyInspectState(_fsm, this, stats));
 
         _fsm.ChangeState("Patrol");
         EventManager.player.OnLastPositionHeard += Audition;
@@ -262,6 +263,7 @@ public struct EnemyStats
 
     [Header("Behavior settings")]
     public float avoidanceStrength;
+    public float inpectTime;
 
     [Header("Settings")]
     public Node[] nodePatrol;
