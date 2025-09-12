@@ -5,14 +5,16 @@ using UnityEngine.Events;
 
 public class ArenaManager : MonoBehaviour
 {
-    public List<Node> allNodes;
+    public List<Node> allNodes, loadedNodes;
 
     public UnityEvent OnStartArena;
 
+    
 
     public void Awake()
     {
         LoadNodes();
+        loadedNodes = EventManager.arena.ActiveNodes;
     }
 
     public void StartArena()

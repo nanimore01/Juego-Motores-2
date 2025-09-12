@@ -137,7 +137,7 @@ GameObject:
   - component: {fileID: 43322204}
   - component: {fileID: 43322203}
   - component: {fileID: 43322208}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Cube (1)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -532,6 +532,7 @@ MonoBehaviour:
   - {fileID: 1473480275}
   - {fileID: 1965162177}
   - {fileID: 146091753}
+  loadedNodes: []
   OnStartArena:
     m_PersistentCalls:
       m_Calls:
@@ -2897,7 +2898,7 @@ MonoBehaviour:
   stats:
     maxForce: 2
     maxVelocity: 2
-    rotationSpeed: 3
+    rotationSpeed: 7
     hearRadius: 0
     reactionTime: 1
     detectionDistance: 5
@@ -2912,7 +2913,7 @@ MonoBehaviour:
     pointing: {fileID: 0}
     wallLayer:
       serializedVersion: 2
-      m_Bits: 0
+      m_Bits: 128
   POV: {fileID: 1552840612}
   Horizontal: 0
   Vertical: 0
@@ -2929,7 +2930,7 @@ Transform:
   m_GameObject: {fileID: 1590798139}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -18.983976, y: 0.5202579, z: 3.9867828}
+  m_LocalPosition: {x: -18.52, y: 0.5202579, z: 3.9867828}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -3058,7 +3059,7 @@ GameObject:
   - component: {fileID: 1791400661}
   - component: {fileID: 1791400660}
   - component: {fileID: 1791400665}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Cube (3)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3695,7 +3696,7 @@ PrefabInstance:
       objectReference: {fileID: 1050328250}
     - target: {fileID: 8220445711593144848, guid: 6b209e6f3d7140c4fbbe4e7deb4e745f, type: 3}
       propertyPath: m_CullingMask.m_Bits
-      value: 55
+      value: 183
       objectReference: {fileID: 0}
     - target: {fileID: 8904537056493562338, guid: 6b209e6f3d7140c4fbbe4e7deb4e745f, type: 3}
       propertyPath: m_LocalPosition.x

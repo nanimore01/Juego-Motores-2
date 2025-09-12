@@ -10,6 +10,7 @@ public class EnemyInspectState : IState
     EnemyStats _stats;
     Animator _animator;
     Rigidbody _rb;
+    Vector3 _pj;
 
     float _rotationSpeed;
 
@@ -30,7 +31,10 @@ public class EnemyInspectState : IState
         _rotationSpeed = _stats.rotationSpeed;
 
         _rb = _me.gameObject.GetComponent<Rigidbody>();
+
     }
+
+
 
     public void OnEnter()
     {
@@ -38,11 +42,14 @@ public class EnemyInspectState : IState
         update = OnInspect;
         _inpectTimer.Start();
         _inpectTimer.OnTimerStop += OnStopInspect;
+
+        _me.OnHeardPlayer += OnHeardPlayer;
+        //_me.OnSpotedPlayer -= OnSpotPlayer;
     }
 
     public void OnExit()
     {
-        
+        _me.OnHeardPlayer -= OnHeardPlayer;
     }
 
     public void OnUpdate()
@@ -53,7 +60,8 @@ public class EnemyInspectState : IState
     public void OnInspect()
     {
         _inpectTimer.Tick(Time.deltaTime);
-        
+        _animator.SetFloat("Horizontal", 0);
+        _animator.SetFloat("Vertical", 0);
     }
 
     public void OnStopInspect()
@@ -64,24 +72,22 @@ public class EnemyInspectState : IState
 
     public void OnReturnPatrol()
     {
-        Vector3 posNode = new Vector3(_me.path[0].transform.position.x, _me.transform.position.y, _me.path[0].transform.position.z);
-        var dir = posNode - _me.transform.position;
-
-        if (_me.path.Count > 0)
+        if (_me.path == null || _me.path.Count == 0)
         {
-            if (_me.InLineOfSight(_me.POV.transform.position, _me.path[0].transform.position) == false)
-            {
-                //_me.SetPath(_me.CalculateThetaStar(_me.GetMinNode(_me.transform.position), _me.GetMinNode(_point)));
-            }
-
-            if (dir.magnitude <= .5f)
-            {
-                Debug.Log("Choque con el nodo");
-                _me.path.RemoveAt(0);
-            }
+            _fsm.ChangeState("Patrol");
+            return;
         }
 
-        if (dir.sqrMagnitude > .01f)
+
+        Vector3 targetWorld = _me.path[0].transform.position;
+        Vector3 posNode = new Vector3(targetWorld.x, _me.transform.position.y, targetWorld.z);
+
+        Vector3 delta = posNode - _me.transform.position;
+        float dist = delta.magnitude;
+        Vector3 dir = dist > 0.001f ? (delta / dist) : Vector3.zero; 
+
+
+        if (dir.sqrMagnitude > 0.0001f)
         {
             Quaternion targetRot = Quaternion.LookRotation(dir);
             _me.transform.rotation = Quaternion.Slerp(
@@ -91,19 +97,52 @@ public class EnemyInspectState : IState
             );
         }
 
-        _me.Move(_me.transform.forward);
+        
+        float angleToTarget = Vector3.Angle(_me.transform.forward, dir);
+        const float moveAngleThreshold = 20f; 
+
+        if (dist > 1f) 
+        {
+            if (angleToTarget <= moveAngleThreshold)
+            {
+                
+                _me.Move(_me.transform.forward);
+            }
+          
+        }
+        else
+        {
+            _me.path.RemoveAt(0);
+        }
+
 
         Vector3 localVel = _me.transform.InverseTransformDirection(_rb.velocity);
+        _animator.SetFloat("Horizontal", Mathf.Clamp(localVel.x, -1f, 1f));
+        _animator.SetFloat("Vertical", Mathf.Clamp(localVel.z, -1f, 1f));
 
-        _animator.SetFloat("Horizontal", Mathf.Clamp(localVel.x, -1, 1));
-        _animator.SetFloat("Vertical", Mathf.Clamp(localVel.z, -1, 1));
-
-        _me.Horizontal = Mathf.Clamp(localVel.x, -1, 1);
-        _me.Vertical = Mathf.Clamp(localVel.z, -1, 1);
+        _me.Horizontal = Mathf.Clamp(localVel.x, -1f, 1f);
+        _me.Vertical = Mathf.Clamp(localVel.z, -1f, 1f);
 
         if (_me.path.Count == 0)
         {
             _fsm.ChangeState("Patrol");
+        }
+    }
+
+    public void GetPlayerPosition(Vector3 player)
+    {
+        _pj = player;
+    }
+
+    public void OnHeardPlayer()
+    {
+        if (_me.InFOV(_pj))
+        {
+            //OnSpotPlayer();
+        }
+        else
+        {
+            _fsm.ChangeState("Sound Heard");
         }
     }
 }

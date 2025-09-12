@@ -85,10 +85,11 @@ public class EnemyBasic : Entity
     }
     public void Move(Vector3 direction)
     {
-        
         _rb.AddForce(direction.normalized * stats.maxVelocity * 10f, ForceMode.Force);
 
-        
+        //stats.animator.SetFloat("Horizontal", Mathf.Clamp(direction.x, -1, 1));
+        //stats.animator.SetFloat("Vertical", Mathf.Clamp(direction.z, -1, 1));
+
         SpeedControl();
     }
 

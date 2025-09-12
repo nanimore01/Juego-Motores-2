@@ -10,7 +10,7 @@ public class EnemyAlertedState : IState
     Rigidbody _rb;
 
     float _rotationSpeed;
-
+    Vector3 _pj;
     Vector3 _point;
     Animator _animator;
     public EnemyAlertedState(EnemyBasic me, FSM fsm, EnemyStats stats)
@@ -30,6 +30,7 @@ public class EnemyAlertedState : IState
     {
         Debug.Log("Alerted Mode");
         EventManager.player.OnLastPositionHeard += SetPoint;
+        //_me.OnHeardPlayer += OnHeardPlayer;
         _me.SetPath(_me.CalculateThetaStar(_me.GetMinNode(_me.transform.position), _me.GetMinNode(_point)));
     }
 
@@ -40,6 +41,12 @@ public class EnemyAlertedState : IState
 
     public void OnUpdate()
     {
+        if (_me.path == null || _me.path.Count == 0)
+        {
+            _fsm.ChangeState("Inspect");
+            return;
+        }
+
         Vector3 posNode = new Vector3(_me.path[0].transform.position.x, _me.transform.position.y, _me.path[0].transform.position.z);
         var dir = posNode - _me.transform.position;
         if (_me.path.Count > 0)
@@ -82,6 +89,24 @@ public class EnemyAlertedState : IState
         if (_me.path.Count == 0)
         {
             _fsm.ChangeState("Inspect");
+        }
+    }
+
+
+    public void GetPlayerPosition(Vector3 player)
+    {
+        _pj = player;
+    }
+
+    public void OnHeardPlayer()
+    {
+        if (_me.InFOV(_pj))
+        {
+            //OnSpotPlayer();
+        }
+        else
+        {
+            _fsm.ChangeState("Sound Heard");
         }
     }
 
