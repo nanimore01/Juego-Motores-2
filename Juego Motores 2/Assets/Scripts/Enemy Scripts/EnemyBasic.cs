@@ -56,7 +56,7 @@ public class EnemyBasic : Entity
     {
         var dir = playerPosition - transform.position;
 
-        if(dir.magnitude < _hearRadius)
+        if(dir.sqrMagnitude < _hearRadius * _hearRadius)
         {
             OnHeardPlayer?.Invoke();
         }
@@ -114,7 +114,7 @@ public class EnemyBasic : Entity
         }
     }
 
-public bool InLineOfSight(Vector3 start, Vector3 end)
+    public bool InLineOfSight(Vector3 start, Vector3 end)
     {
         var dir = end - start;
 

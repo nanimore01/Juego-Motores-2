@@ -22,11 +22,12 @@ public class PlayerRunState : IState
     public void OnExit()
     {
         EventManager.player.OnStopRunning?.Invoke();
+        EventManager.player.OnLastPositionHeard?.Invoke(_me.transform.position);
     }
 
     public void OnUpdate()
     {
         EventManager.player.OnRun?.Invoke();
-        EventManager.player.OnLastPositionHeard?.Invoke(_me.transform.position);
+        
     }
 }
