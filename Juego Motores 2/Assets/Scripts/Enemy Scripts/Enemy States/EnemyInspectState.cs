@@ -31,7 +31,7 @@ public class EnemyInspectState : IState
         _rotationSpeed = _stats.rotationSpeed;
 
         _rb = _me.gameObject.GetComponent<Rigidbody>();
-
+        EventManager.player.PlayerPosition += GetPlayerPosition;
     }
 
 
@@ -43,13 +43,16 @@ public class EnemyInspectState : IState
         _inpectTimer.Start();
         _inpectTimer.OnTimerStop += OnStopInspect;
 
+        EventManager.player.PlayerPosition += GetPlayerPosition;
         _me.OnHeardPlayer += OnHeardPlayer;
-        //_me.OnSpotedPlayer -= OnSpotPlayer;
+        _me.OnSpotedPlayer += OnSpotPlayer;
     }
 
     public void OnExit()
     {
         _me.OnHeardPlayer -= OnHeardPlayer;
+        _me.OnSpotedPlayer -= OnSpotPlayer;
+        EventManager.player.PlayerPosition -= GetPlayerPosition;
     }
 
     public void OnUpdate()
@@ -136,13 +139,19 @@ public class EnemyInspectState : IState
 
     public void OnHeardPlayer()
     {
-        if (_me.InFOV(_pj))
+        //_fsm.ChangeState("Sound Heard");
+
+        if (_me.InLineOfSight(_me.transform.position, _pj))
         {
-            //OnSpotPlayer();
+            OnSpotPlayer();
         }
         else
         {
             _fsm.ChangeState("Sound Heard");
         }
+    }
+    public void OnSpotPlayer()
+    {
+        Debug.Log("Te detecte");
     }
 }

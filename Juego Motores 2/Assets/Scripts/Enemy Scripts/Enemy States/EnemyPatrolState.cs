@@ -36,9 +36,9 @@ public class EnemyPatrolState : IState
         Debug.Log("Patrol Mode");
         _rb.velocity = Vector3.zero;
         _currWaypoint = 0;
-        //EventManager.player.PlayerPosition += GetPlayerPosition;
+        EventManager.player.PlayerPosition += GetPlayerPosition;
         _me.OnHeardPlayer += OnHeardPlayer;
-        //_me.OnSpotedPlayer += OnSpotPlayer;
+        _me.OnSpotedPlayer += OnSpotPlayer;
     }
 
     public void OnExit()
