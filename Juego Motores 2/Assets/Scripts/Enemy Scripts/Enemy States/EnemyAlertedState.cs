@@ -10,6 +10,7 @@ public class EnemyAlertedState : IState
     FSM _fsm;
     EnemyStats _stats;
     Rigidbody _rb;
+    VoiceLines _voiceLines;
 
     float _rotationSpeed;
     Vector3 _pj;
@@ -17,17 +18,27 @@ public class EnemyAlertedState : IState
     Animator _animator;
 
     UnityAction Update;
-
-    public EnemyAlertedState(EnemyBasic me, FSM fsm, EnemyStats stats)
+    AudioSource _audioSource;
+    Vector3 avoidance = Vector3.zero;
+    float _avoidanceStrength = 1f;
+    float _avoidanceDistance = 2f;
+    float _spreadAngle = 30f;
+    public EnemyAlertedState(EnemyBasic me, FSM fsm, EnemyStats stats, VoiceLines voiceLines)
     {
         _me = me;
         _fsm = fsm;
         _stats = stats;
+        _voiceLines = voiceLines;
 
         _animator = _stats.animator;
         _rotationSpeed = _stats.rotationSpeed;
+        _avoidanceDistance = _stats.avoidanceDistance;
+        _avoidanceStrength = _stats.avoidanceStrength;
+        _spreadAngle = _stats.spreadAngle;
 
         _rb = _me.gameObject.GetComponent<Rigidbody>();
+        _audioSource = _me.gameObject.GetComponent<AudioSource>();
+
         EventManager.player.PlayerPosition += GetPlayerPosition;
         EventManager.player.OnLastPositionHeard += SetPoint;
     }
@@ -144,6 +155,7 @@ public class EnemyAlertedState : IState
         }
         else
         {
+            _audioSource.PlayOneShot(_voiceLines.onHeardASound);
             _fsm.ChangeState("Sound Heard");
         }
     }
@@ -153,38 +165,38 @@ public class EnemyAlertedState : IState
         if (targetDir.sqrMagnitude < 0.0001f)
             return _me.transform.forward;
 
-        Vector3 avoidance = Vector3.zero;
-        float avoidanceStrength = 1f;
-        float rayDistance = 2f;
-        float spreadAngle = 30f;
+        //Vector3 avoidance = Vector3.zero;
+        //float avoidanceStrength = 1f;
+        //float rayDistance = 2f;
+        //float spreadAngle = 30f;
 
         Vector3 origin = _me.transform.position + Vector3.up * 0.5f;
         RaycastHit hit;
 
 
-        if (Physics.Raycast(origin, targetDir, out hit, rayDistance))
+        if (Physics.Raycast(origin, targetDir, out hit, _avoidanceDistance))
         {
-            avoidance += Vector3.Reflect(targetDir, hit.normal) * avoidanceStrength;
+            avoidance += Vector3.Reflect(targetDir, hit.normal) * _avoidanceStrength;
         }
 
    
-        Vector3 rightDir = Quaternion.Euler(0, spreadAngle, 0) * targetDir;
-        if (Physics.Raycast(origin, rightDir, out hit, rayDistance))
+        Vector3 rightDir = Quaternion.Euler(0, _spreadAngle, 0) * targetDir;
+        if (Physics.Raycast(origin, rightDir, out hit, _avoidanceDistance))
         {
-            avoidance += Vector3.Reflect(targetDir, hit.normal) * avoidanceStrength * 0.9f;
+            avoidance += Vector3.Reflect(targetDir, hit.normal) * _avoidanceStrength * 0.9f;
         }
 
   
-        Vector3 leftDir = Quaternion.Euler(0, -spreadAngle, 0) * targetDir;
-        if (Physics.Raycast(origin, leftDir, out hit, rayDistance))
+        Vector3 leftDir = Quaternion.Euler(0, -_spreadAngle, 0) * targetDir;
+        if (Physics.Raycast(origin, leftDir, out hit, _avoidanceDistance))
         {
-            avoidance += Vector3.Reflect(targetDir, hit.normal) * avoidanceStrength * 0.9f;
+            avoidance += Vector3.Reflect(targetDir, hit.normal) * _avoidanceStrength * 0.9f;
         }
 
         // Debug
-        Debug.DrawRay(origin, targetDir * rayDistance, Color.red);
-        Debug.DrawRay(origin, rightDir * rayDistance, Color.yellow);
-        Debug.DrawRay(origin, leftDir * rayDistance, Color.cyan);
+        Debug.DrawRay(origin, targetDir * _avoidanceDistance, Color.red);
+        Debug.DrawRay(origin, rightDir * _avoidanceDistance, Color.yellow);
+        Debug.DrawRay(origin, leftDir * _avoidanceDistance, Color.cyan);
 
         Vector3 combined = (targetDir + avoidance);
         return combined.sqrMagnitude > 0.0001f ? combined.normalized : targetDir;

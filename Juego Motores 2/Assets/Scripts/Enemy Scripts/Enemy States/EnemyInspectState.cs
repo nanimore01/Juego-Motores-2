@@ -11,14 +11,19 @@ public class EnemyInspectState : IState
     Animator _animator;
     Rigidbody _rb;
     Vector3 _pj;
+    VoiceLines _voiceLines;
 
     float _rotationSpeed;
 
     CountdownTimer _inpectTimer;
 
 
-    UnityAction update;  
-    
+    UnityAction update;
+
+    Vector3 avoidance = Vector3.zero;
+    float _avoidanceStrength = 1f;
+    float _avoidanceDistance = 2f;
+    float _spreadAngle = 30f;
 
     public EnemyInspectState(FSM fsm, EnemyBasic me, EnemyStats stats)
     {
@@ -70,6 +75,7 @@ public class EnemyInspectState : IState
     public void OnStopInspect()
     {
         update = OnReturnPatrol;
+        _me.OnStopInspect.Invoke();
         _me.SetPath(_me.CalculateThetaStar(_me.GetMinNode(_me.transform.position), _me.GetMinNode(_stats.nodePatrol[0].transform.position)));
     }
 
@@ -81,41 +87,30 @@ public class EnemyInspectState : IState
             return;
         }
 
+        Vector3 posNode = new Vector3(_me.path[0].transform.position.x, _me.transform.position.y, _me.path[0].transform.position.z);
+        var dir = posNode - _me.transform.position;
 
-        Vector3 targetWorld = _me.path[0].transform.position;
-        Vector3 posNode = new Vector3(targetWorld.x, _me.transform.position.y, targetWorld.z);
-
-        Vector3 delta = posNode - _me.transform.position;
-        float dist = delta.magnitude;
-        Vector3 dir = dist > 0.001f ? (delta / dist) : Vector3.zero; 
-
-
-        if (dir.sqrMagnitude > 0.0001f)
+        if (_me.path.Count > 0)
         {
-            Quaternion targetRot = Quaternion.LookRotation(dir);
+            if (dir.magnitude <= 1f)
+            {
+                Debug.Log("Choque con el nodo");
+                _me.path.RemoveAt(0);
+            }
+        }
+
+        if (dir.sqrMagnitude > .01f)
+        {
+            Vector3 finalDir = GetAvoidanceDirection(dir.normalized);
+
+            Quaternion targetRot = Quaternion.LookRotation(finalDir);
             _me.transform.rotation = Quaternion.Slerp(
                 _me.transform.rotation,
                 targetRot,
                 _rotationSpeed * Time.deltaTime
             );
-        }
 
-        
-        float angleToTarget = Vector3.Angle(_me.transform.forward, dir);
-        const float moveAngleThreshold = 20f; 
-
-        if (dist > 1f) 
-        {
-            if (angleToTarget <= moveAngleThreshold)
-            {
-                
-                _me.Move(_me.transform.forward);
-            }
-          
-        }
-        else
-        {
-            _me.path.RemoveAt(0);
+            _me.Move(finalDir);
         }
 
 
@@ -153,5 +148,47 @@ public class EnemyInspectState : IState
     public void OnSpotPlayer()
     {
         Debug.Log("Te detecte");
+    }
+
+    Vector3 GetAvoidanceDirection(Vector3 targetDir)
+    {
+        if (targetDir.sqrMagnitude < 0.0001f)
+            return _me.transform.forward;
+
+        //Vector3 avoidance = Vector3.zero;
+        //float avoidanceStrength = 1f;
+        //float rayDistance = 2f;
+        //float spreadAngle = 30f;
+
+        Vector3 origin = _me.transform.position + Vector3.up * 0.5f;
+        RaycastHit hit;
+
+
+        if (Physics.Raycast(origin, targetDir, out hit, _avoidanceDistance))
+        {
+            avoidance += Vector3.Reflect(targetDir, hit.normal) * _avoidanceStrength;
+        }
+
+
+        Vector3 rightDir = Quaternion.Euler(0, _spreadAngle, 0) * targetDir;
+        if (Physics.Raycast(origin, rightDir, out hit, _avoidanceDistance))
+        {
+            avoidance += Vector3.Reflect(targetDir, hit.normal) * _avoidanceStrength * 0.9f;
+        }
+
+
+        Vector3 leftDir = Quaternion.Euler(0, -_spreadAngle, 0) * targetDir;
+        if (Physics.Raycast(origin, leftDir, out hit, _avoidanceDistance))
+        {
+            avoidance += Vector3.Reflect(targetDir, hit.normal) * _avoidanceStrength * 0.9f;
+        }
+
+        // Debug
+        Debug.DrawRay(origin, targetDir * _avoidanceDistance, Color.red);
+        Debug.DrawRay(origin, rightDir * _avoidanceDistance, Color.yellow);
+        Debug.DrawRay(origin, leftDir * _avoidanceDistance, Color.cyan);
+
+        Vector3 combined = (targetDir + avoidance);
+        return combined.sqrMagnitude > 0.0001f ? combined.normalized : targetDir;
     }
 }

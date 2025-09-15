@@ -21,9 +21,13 @@ public class EnemyBasic : Entity
     public UnityAction OnHeardPlayer;
     public UnityAction<float> progressOfSpotReaction;
     public UnityAction OnSpotedPlayer;
+    public UnityAction OnStopInspect;
     CountdownTimer _reactionTimer;
     Rigidbody _rb;
     float _dampingFactor = 10;
+
+    
+
     public void Awake()
     {
         _rb = gameObject.GetComponent<Rigidbody>();
@@ -32,8 +36,8 @@ public class EnemyBasic : Entity
 
         _fsm = new FSM();
 
-        _fsm.CreateState("Patrol", new EnemyPatrolState(this, _fsm, stats));
-        _fsm.CreateState("Sound Heard", new EnemyAlertedState(this, _fsm, stats));
+        _fsm.CreateState("Patrol", new EnemyPatrolState(this, _fsm, stats, voiceLines));
+        _fsm.CreateState("Sound Heard", new EnemyAlertedState(this, _fsm, stats, voiceLines));
         _fsm.CreateState("Inspect", new EnemyInspectState(_fsm, this, stats));
 
         _fsm.ChangeState("Patrol");
@@ -42,6 +46,8 @@ public class EnemyBasic : Entity
         _reactionTimer = new CountdownTimer(stats.reactionTime);
 
         _reactionTimer.OnTimerStop += OnSpotPlayer;
+
+        
     }
 
     public void Update()
@@ -246,6 +252,8 @@ public class EnemyBasic : Entity
 
         return minNode;
     }
+
+    
 }
 
 [System.Serializable]
@@ -263,8 +271,10 @@ public struct EnemyStats
     public float detectionDistance;
 
     [Header("Behavior settings")]
-    public float avoidanceStrength;
     public float inpectTime;
+    public float avoidanceStrength;
+    public float avoidanceDistance;
+    public float spreadAngle; 
 
     [Header("Settings")]
     public Node[] nodePatrol;
@@ -277,5 +287,7 @@ public struct EnemyStats
 [System.Serializable]
 public struct VoiceLines
 {
-
+    [Header("Relaxed Voice Lines")]
+    public AudioClip onHeardASound;
+    
 }

@@ -7,6 +7,7 @@ public class EnemyPatrolState : IState
     EnemyBasic _me;
     FSM _fsm;
     EnemyStats _stats;
+    VoiceLines _voiceLines;
 
     Vector3 _velocity;
     float _maxVelocity, _maxForce, _rotationSpeed;
@@ -16,11 +17,13 @@ public class EnemyPatrolState : IState
     Animator _animator;
     Rigidbody _rb;
     Vector3 _pj;
-    public EnemyPatrolState(EnemyBasic me, FSM fsm, EnemyStats stats)
+    AudioSource _audioSource;
+    public EnemyPatrolState(EnemyBasic me, FSM fsm, EnemyStats stats, VoiceLines voiceLines)
     {
         _me = me;
         _fsm = fsm;
         _stats = stats;
+        _voiceLines = voiceLines;
 
         _maxVelocity = _stats.maxVelocity;
         _maxForce = _stats.maxForce;
@@ -29,6 +32,7 @@ public class EnemyPatrolState : IState
         _rotationSpeed = _stats.rotationSpeed;
 
         _rb = _me.gameObject.GetComponent<Rigidbody>();
+        _audioSource = _me.gameObject.GetComponent<AudioSource>();
     }
 
     public void OnEnter()
@@ -60,8 +64,8 @@ public class EnemyPatrolState : IState
 
         // --- Avoidance ---
         Vector3 avoidance = Vector3.zero;
-        float avoidanceStrength = 1f; // qué tan fuerte esquiva
-        float rayDistance = 0.1f; // distancia del "sensor"
+        float avoidanceStrength = _stats.avoidanceStrength; // qué tan fuerte esquiva
+        float rayDistance = _stats.avoidanceDistance; // distancia del "sensor"
 
         RaycastHit hit;
         if (Physics.Raycast(_me.transform.position + Vector3.up * 0.1f, _me.transform.forward, out hit, rayDistance))
@@ -193,6 +197,7 @@ public class EnemyPatrolState : IState
         }
         else
         {
+            _audioSource.PlayOneShot(_voiceLines.onHeardASound);
             _fsm.ChangeState("Sound Heard");
         }
     }
