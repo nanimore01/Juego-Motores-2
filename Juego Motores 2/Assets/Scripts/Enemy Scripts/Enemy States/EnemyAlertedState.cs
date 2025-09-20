@@ -19,10 +19,10 @@ public class EnemyAlertedState : IState
 
     UnityAction Update;
     AudioSource _audioSource;
-    Vector3 avoidance = Vector3.zero;
-    float _avoidanceStrength = 1f;
-    float _avoidanceDistance = 2f;
-    float _spreadAngle = 30f;
+
+
+    BehaviorAvoidance _behaviorAvoidance;
+
     public EnemyAlertedState(EnemyBasic me, FSM fsm, EnemyStats stats, VoiceLines voiceLines)
     {
         _me = me;
@@ -32,12 +32,11 @@ public class EnemyAlertedState : IState
 
         _animator = _stats.animator;
         _rotationSpeed = _stats.rotationSpeed;
-        _avoidanceDistance = _stats.avoidanceDistance;
-        _avoidanceStrength = _stats.avoidanceStrength;
-        _spreadAngle = _stats.spreadAngle;
 
-        _rb = _me.gameObject.GetComponent<Rigidbody>();
+        _rb = _me._rb;
         _audioSource = _me.gameObject.GetComponent<AudioSource>();
+
+        _behaviorAvoidance = new BehaviorAvoidance(me.transform,me);
 
         EventManager.player.PlayerPosition += GetPlayerPosition;
         EventManager.player.OnLastPositionHeard += SetPoint;
@@ -47,12 +46,13 @@ public class EnemyAlertedState : IState
     {
         Debug.Log("Alerted Mode");
         
-        
         EventManager.player.OnLastPositionHeard += SetPoint;
         EventManager.player.PlayerPosition += GetPlayerPosition;
         Update = OnPath;
         _me.SetPath(_me.CalculateThetaStar(_me.GetMinNode(_me.transform.position), _me.GetMinNode(_point)));
         Debug.Log("Punto de sonido: " + _point);
+
+        //_behaviorAvoidance.OnGetStuck = WallDetected;
     }
 
     public void OnExit()
@@ -68,7 +68,7 @@ public class EnemyAlertedState : IState
 
     public void OnPath()
     {
-        if (_me.path == null || _me.path.Count == 0 || _me.InLineOfSight(_me.transform.position, _point))
+        if (_me.path == null || _me.path.Count == 0)
         {
             Update = OnFinished;
             return;
@@ -88,8 +88,9 @@ public class EnemyAlertedState : IState
 
         if (dir.sqrMagnitude > .01f)
         {
-            Vector3 finalDir = GetAvoidanceDirection(dir.normalized);
-
+            Vector3 finalDir = _behaviorAvoidance.GetAvoidanceDirection(dir.normalized);
+            Debug.DrawRay(_me.transform.position, finalDir);
+            Debug.Log("Direccion Final: " + finalDir);
             Quaternion targetRot = Quaternion.LookRotation(finalDir);
             _me.transform.rotation = Quaternion.Slerp(
                 _me.transform.rotation,
@@ -98,6 +99,7 @@ public class EnemyAlertedState : IState
             );
 
             _me.Move(finalDir);
+            //
         }
 
         Vector3 localVel = _me.transform.InverseTransformDirection(_rb.velocity);
@@ -117,8 +119,9 @@ public class EnemyAlertedState : IState
         Vector3 position = new Vector3(_point.x, _me.transform.position.y, _point.z);
         var dir = position - _me.transform.position;
 
-        Vector3 finalDir = GetAvoidanceDirection(dir.normalized);
-
+        Vector3 finalDir = _behaviorAvoidance.GetAvoidanceDirection(dir.normalized);
+        Debug.DrawRay(_me.transform.position, finalDir,Color.red, 1f);
+        Debug.Log("Direccion Final: " + finalDir);
         if (finalDir.sqrMagnitude > .01f)
         {
             Quaternion targetRot = Quaternion.LookRotation(finalDir);
@@ -128,6 +131,8 @@ public class EnemyAlertedState : IState
                 _rotationSpeed * Time.deltaTime
             );
         }
+
+        //Debug.Log("Direccion Final: " + finalDir);
 
         if (dir.magnitude <= 1f)
         {
@@ -160,46 +165,57 @@ public class EnemyAlertedState : IState
         }
     }
 
-    Vector3 GetAvoidanceDirection(Vector3 targetDir)
+    //Vector3 GetAvoidanceDirection(Vector3 desiredDir)
+    //{
+    //    if (desiredDir.sqrMagnitude < 0.0001f)
+    //        return Vector3.zero;
+
+    //    desiredDir.Normalize();
+
+    //    Vector3 origin = _me.transform.position + Vector3.up * 0.6f;
+    //    float rayDistance = _avoidanceDistance;
+    //    float spread = _spreadAngle;
+
+    //    // definimos las 3 direcciones
+    //    Vector3 center = desiredDir;
+    //    Vector3 left = Quaternion.Euler(0, -spread, 0) * desiredDir;
+    //    Vector3 right = Quaternion.Euler(0, spread, 0) * desiredDir;
+
+    //    // --- Raycast central ---
+    //    if (Physics.Raycast(origin, center, rayDistance))
+    //    {
+    //        bool leftClear = !Physics.Raycast(origin, left, rayDistance);
+    //        bool rightClear = !Physics.Raycast(origin, right, rayDistance);
+
+    //        if (leftClear && !rightClear) return (desiredDir + left * 0.7f).normalized;
+    //        if (rightClear && !leftClear) return (desiredDir + right * 0.7f).normalized;
+    //        if (leftClear && rightClear)
+    //        {
+    //            // elige el más alineado con la dirección deseada
+    //            float dotL = Vector3.Dot(desiredDir, left);
+    //            float dotR = Vector3.Dot(desiredDir, right);
+    //            return (desiredDir + (dotL > dotR ? left : right) * 0.7f).normalized;
+    //        }
+
+    //        OnDetectWall?.Invoke();
+
+    //        return Vector3.zero;
+    //    }
+
+    //    // --- si no hay nada enfrente, seguí normal ---
+    //    return desiredDir;
+
+    //    Debug.DrawRay(origin, center * rayDistance, Color.red);
+    //    Debug.DrawRay(origin, left * rayDistance, Color.yellow);
+    //    Debug.DrawRay(origin, right * rayDistance, Color.yellow);
+
+    //}
+
+    public void WallDetected()
     {
-        if (targetDir.sqrMagnitude < 0.0001f)
-            return _me.transform.forward;
-
-        //Vector3 avoidance = Vector3.zero;
-        //float avoidanceStrength = 1f;
-        //float rayDistance = 2f;
-        //float spreadAngle = 30f;
-
-        Vector3 origin = _me.transform.position + Vector3.up * 0.5f;
-        RaycastHit hit;
-
-
-        if (Physics.Raycast(origin, targetDir, out hit, _avoidanceDistance))
-        {
-            avoidance += Vector3.Reflect(targetDir, hit.normal) * _avoidanceStrength;
-        }
-
-   
-        Vector3 rightDir = Quaternion.Euler(0, _spreadAngle, 0) * targetDir;
-        if (Physics.Raycast(origin, rightDir, out hit, _avoidanceDistance))
-        {
-            avoidance += Vector3.Reflect(targetDir, hit.normal) * _avoidanceStrength * 0.9f;
-        }
-
-  
-        Vector3 leftDir = Quaternion.Euler(0, -_spreadAngle, 0) * targetDir;
-        if (Physics.Raycast(origin, leftDir, out hit, _avoidanceDistance))
-        {
-            avoidance += Vector3.Reflect(targetDir, hit.normal) * _avoidanceStrength * 0.9f;
-        }
-
-        // Debug
-        Debug.DrawRay(origin, targetDir * _avoidanceDistance, Color.red);
-        Debug.DrawRay(origin, rightDir * _avoidanceDistance, Color.yellow);
-        Debug.DrawRay(origin, leftDir * _avoidanceDistance, Color.cyan);
-
-        Vector3 combined = (targetDir + avoidance);
-        return combined.sqrMagnitude > 0.0001f ? combined.normalized : targetDir;
+        Debug.Log("WallDetected Funciona");
+        _me.SetPath(_me.CalculateThetaStar(_me.GetMinNode(_me.transform.position), _me.GetMinNode(_point)));
+        Update = OnPath;
     }
 
     public void SetPoint(Vector3 position)

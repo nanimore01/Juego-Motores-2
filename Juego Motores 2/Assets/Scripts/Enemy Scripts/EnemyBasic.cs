@@ -3,14 +3,15 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 
-public class EnemyBasic : Entity
+public class EnemyBasic : Entity, IGet<EnemyStats>, IGet<VoiceLines>
 {
-    private FSM _fsm;
+    
+    public FSM _fsm;
     [SerializeField] EnemyStats stats;
     [SerializeField] VoiceLines voiceLines;
     public GameObject POV;
     
-
+    
     public float Horizontal, Vertical;
 
 
@@ -23,13 +24,14 @@ public class EnemyBasic : Entity
     public UnityAction OnSpotedPlayer;
     public UnityAction OnStopInspect;
     CountdownTimer _reactionTimer;
-    Rigidbody _rb;
+    public Rigidbody _rb;
     float _dampingFactor = 10;
 
     
-
+    
     public void Awake()
     {
+        ((IGet<EnemyStats>)this).Get();
         _rb = gameObject.GetComponent<Rigidbody>();
 
         _currHp = _maxHP;
@@ -38,7 +40,7 @@ public class EnemyBasic : Entity
 
         _fsm.CreateState("Patrol", new EnemyPatrolState(this, _fsm, stats, voiceLines));
         _fsm.CreateState("Sound Heard", new EnemyAlertedState(this, _fsm, stats, voiceLines));
-        _fsm.CreateState("Inspect", new EnemyInspectState(_fsm, this, stats));
+        _fsm.CreateState("Inspect", new EnemyInspectState(this));
 
         _fsm.ChangeState("Patrol");
         EventManager.player.OnLastPositionHeard += Audition;
@@ -253,7 +255,15 @@ public class EnemyBasic : Entity
         return minNode;
     }
 
-    
+    EnemyStats IGet<EnemyStats>.Get()
+    {
+        return stats;
+    }
+
+    VoiceLines IGet<VoiceLines>.Get()
+    {
+        return voiceLines;
+    }
 }
 
 [System.Serializable]
