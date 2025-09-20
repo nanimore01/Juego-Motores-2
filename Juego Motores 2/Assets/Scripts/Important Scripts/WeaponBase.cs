@@ -15,6 +15,13 @@ public abstract class WeaponBase : MonoBehaviour, IWeapon
     [SerializeField] protected int _actualMag;
     [SerializeField] protected int _totalAmmoStash;
 
+    Vector3 originalPos;
+    Vector3 Newpos;
+    Quaternion originalRot;
+    Quaternion newRot;
+
+    public float speedRecover;
+
     public CountdownTimer _shotTimer;
 
     public event Action OnReloading;
@@ -28,10 +35,13 @@ public abstract class WeaponBase : MonoBehaviour, IWeapon
     [SerializeField] protected UnityEvent OnClickRightDown;
     [SerializeField] protected UnityEvent OnClickRight;
 
+    [SerializeField] protected Action UpdateBehavior;
     public void Awake()
     {
         //_pj = gameObject.GetComponentInParent<FirstPersonPlayer>();
         _shotTimer = new CountdownTimer(_shotTime);
+        originalPos = transform.localPosition;
+        originalRot = transform.localRotation;
     }
     public void Start()
     {
@@ -45,6 +55,7 @@ public abstract class WeaponBase : MonoBehaviour, IWeapon
     {
         _shotTimer.Tick(Time.deltaTime);
 
+        UpdateBehavior.Invoke();
     }
     public void OnClickUpBehavior()
     {
@@ -135,6 +146,48 @@ public abstract class WeaponBase : MonoBehaviour, IWeapon
         }
     }
 
+    public void WeaponModelRecoil(float recoil)
+    {
+        Newpos = new Vector3(0, 0, -recoil);
+        if (transform.localPosition.z > originalPos.z - 0.2f)
+        {
+            transform.localPosition += Newpos;
+        }
+
+
+        if(!IsSubscribed(UpdateBehavior, ReturnWeaponPosition))
+        {
+            UpdateBehavior += ReturnWeaponPosition;
+        }
+    }
+
+    public void WeaponRotation(float recoil)
+    {
+        newRot = Quaternion.Euler(originalRot.eulerAngles.x - recoil, originalRot.eulerAngles.y, originalRot.eulerAngles.z);
+        transform.localRotation = newRot;
+
+        if (!IsSubscribed(UpdateBehavior, ReturnWeaponPosition))
+        {
+            UpdateBehavior += ReturnWeaponPosition;
+        }
+    }
+
+    public void ReturnWeaponPosition()
+    {
+        if (transform.localPosition.z < originalPos.z)
+        {
+            transform.localPosition -= Newpos * Time.deltaTime * speedRecover;
+        }
+
+        if (transform.localRotation.x <= originalRot.x)
+        {
+            transform.localRotation = Quaternion.Lerp(transform.localRotation, originalRot, Time.deltaTime * speedRecover * 10);
+        }
+
+
+    }
+
+
     public bool PointingOnLayerMask(LayerMask layer)
     {
         return layer == _shotableMask;
@@ -199,7 +252,18 @@ public abstract class WeaponBase : MonoBehaviour, IWeapon
             _totalAmmoStash = 0;
         }
     }
+    public bool IsSubscribed(Action evento, Action metodo)
+    {
+        if (evento == null) return false;
 
+        foreach (var d in evento.GetInvocationList())
+        {
+            if (d.Method == metodo.Method && d.Target == metodo.Target)
+                return true;
+        }
+
+        return false;
+    }
 }
 
 
