@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.Events;
 using System;
-public abstract class WeaponBase : MonoBehaviour, IWeapon
+public abstract class WeaponBase : MonoBehaviour, IWeapon, IGet<IWeapon>
 {
     [SerializeField]Animator _animator;
 
@@ -47,7 +47,8 @@ public abstract class WeaponBase : MonoBehaviour, IWeapon
     {
         _shotTimer.OnTimerStart += CooldownOn;
         _shotTimer.OnTimerStop += CooldownOff;
-
+        UpdateBehavior += ReturnWeaponPosition;
+        UpdateBehavior += ReturnWeaponPosition;
         _canShot = true;
     }
 
@@ -55,7 +56,7 @@ public abstract class WeaponBase : MonoBehaviour, IWeapon
     {
         _shotTimer.Tick(Time.deltaTime);
 
-        UpdateBehavior.Invoke();
+        UpdateBehavior?.Invoke();
     }
     public void OnClickUpBehavior()
     {
@@ -69,8 +70,9 @@ public abstract class WeaponBase : MonoBehaviour, IWeapon
         if (!isReloading && _canShot)
         {
             OnClickDown?.Invoke();
+            print("Funciono");
         }
-        print("Funciono");
+        
     }
     public void OnClickBehavior()
     {
@@ -155,10 +157,10 @@ public abstract class WeaponBase : MonoBehaviour, IWeapon
         }
 
 
-        if(!IsSubscribed(UpdateBehavior, ReturnWeaponPosition))
-        {
-            UpdateBehavior += ReturnWeaponPosition;
-        }
+        //if(!IsSubscribed(UpdateBehavior, ReturnWeaponPosition))
+        //{
+            
+        //}
     }
 
     public void WeaponRotation(float recoil)
@@ -166,10 +168,12 @@ public abstract class WeaponBase : MonoBehaviour, IWeapon
         newRot = Quaternion.Euler(originalRot.eulerAngles.x - recoil, originalRot.eulerAngles.y, originalRot.eulerAngles.z);
         transform.localRotation = newRot;
 
-        if (!IsSubscribed(UpdateBehavior, ReturnWeaponPosition))
-        {
-            UpdateBehavior += ReturnWeaponPosition;
-        }
+        print("Deberia de funcionar");
+        //if (!IsSubscribed(UpdateBehavior, ReturnWeaponPosition))
+        //{
+        //    print("Me suscribo al Update");
+
+        //}
     }
 
     public void ReturnWeaponPosition()
@@ -183,8 +187,7 @@ public abstract class WeaponBase : MonoBehaviour, IWeapon
         {
             transform.localRotation = Quaternion.Lerp(transform.localRotation, originalRot, Time.deltaTime * speedRecover * 10);
         }
-
-
+        
     }
 
 
@@ -202,7 +205,7 @@ public abstract class WeaponBase : MonoBehaviour, IWeapon
     {
         if (_totalAmmoStash > 0 && _actualMag < _ammoPerMag)
         {
-            _animator.SetTrigger("Reload");
+            _animator.Play("Reload");
             isReloading = true;
         }
         else
@@ -251,6 +254,8 @@ public abstract class WeaponBase : MonoBehaviour, IWeapon
             _actualMag += _totalAmmoStash;
             _totalAmmoStash = 0;
         }
+        isReloading = false;
+        _animator.Play("Idle");
     }
     public bool IsSubscribed(Action evento, Action metodo)
     {
@@ -263,6 +268,11 @@ public abstract class WeaponBase : MonoBehaviour, IWeapon
         }
 
         return false;
+    }
+
+    IWeapon IGet<IWeapon>.Get()
+    {
+        throw new NotImplementedException();
     }
 }
 

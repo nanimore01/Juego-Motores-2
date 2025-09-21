@@ -50,7 +50,7 @@ public class FPSComponent : MonoBehaviour
         if(currentWeapon != null)
         {
             if (Input.GetKeyDown(KeyCode.R))
-                currentWeapon.Reload();
+                currentWeapon.ReloadAnimation();
         }
 
         
