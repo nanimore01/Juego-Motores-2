@@ -47,7 +47,7 @@ public abstract class WeaponBase : MonoBehaviour, IWeapon, IGet<IWeapon>
     {
         _shotTimer.OnTimerStart += CooldownOn;
         _shotTimer.OnTimerStop += CooldownOff;
-        UpdateBehavior += ReturnWeaponPosition;
+        
         UpdateBehavior += ReturnWeaponPosition;
         _canShot = true;
     }
@@ -157,10 +157,10 @@ public abstract class WeaponBase : MonoBehaviour, IWeapon, IGet<IWeapon>
         }
 
 
-        //if(!IsSubscribed(UpdateBehavior, ReturnWeaponPosition))
-        //{
-            
-        //}
+        if (!IsSubscribed(UpdateBehavior, ReturnWeaponPosition))
+        {
+            UpdateBehavior += ReturnWeaponPosition;
+        }
     }
 
     public void WeaponRotation(float recoil)
@@ -168,12 +168,12 @@ public abstract class WeaponBase : MonoBehaviour, IWeapon, IGet<IWeapon>
         newRot = Quaternion.Euler(originalRot.eulerAngles.x - recoil, originalRot.eulerAngles.y, originalRot.eulerAngles.z);
         transform.localRotation = newRot;
 
-        print("Deberia de funcionar");
-        //if (!IsSubscribed(UpdateBehavior, ReturnWeaponPosition))
-        //{
-        //    print("Me suscribo al Update");
+        if (!IsSubscribed(UpdateBehavior, ReturnWeaponPosition))
+        {
+            UpdateBehavior += ReturnWeaponPosition;
+            print("Me suscribo al Update");
 
-        //}
+        }
     }
 
     public void ReturnWeaponPosition()
