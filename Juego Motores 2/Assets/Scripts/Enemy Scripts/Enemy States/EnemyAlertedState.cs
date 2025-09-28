@@ -49,7 +49,7 @@ public class EnemyAlertedState : IState
         EventManager.player.OnLastPositionHeard += SetPoint;
         EventManager.player.PlayerPosition += GetPlayerPosition;
         Update = OnPath;
-        _me.SetPath(_me.CalculateThetaStar(_me.GetMinNode(_me.transform.position), _me.GetMinNode(_point)));
+        _me.SetPath(Pathfinding.CalculateThetaStar(Pathfinding.GetMinNode(_me.transform.position), Pathfinding.GetMinNode(_point)));
         Debug.Log("Punto de sonido: " + _point);
 
         //_behaviorAvoidance.OnGetStuck = WallDetected;
@@ -154,7 +154,7 @@ public class EnemyAlertedState : IState
 
     public void OnHeardPlayer()
     {
-        if (_me.InLineOfSight(_me.transform.position, _pj))
+        if (Pathfinding.InLineOfSight(_me.transform.position, _pj))
         {
             OnSpotPlayer();
         }
@@ -191,7 +191,7 @@ public class EnemyAlertedState : IState
     //        if (rightClear && !leftClear) return (desiredDir + right * 0.7f).normalized;
     //        if (leftClear && rightClear)
     //        {
-    //            // elige el más alineado con la dirección deseada
+    //            // elige el mï¿½s alineado con la direcciï¿½n deseada
     //            float dotL = Vector3.Dot(desiredDir, left);
     //            float dotR = Vector3.Dot(desiredDir, right);
     //            return (desiredDir + (dotL > dotR ? left : right) * 0.7f).normalized;
@@ -202,7 +202,7 @@ public class EnemyAlertedState : IState
     //        return Vector3.zero;
     //    }
 
-    //    // --- si no hay nada enfrente, seguí normal ---
+    //    // --- si no hay nada enfrente, seguï¿½ normal ---
     //    return desiredDir;
 
     //    Debug.DrawRay(origin, center * rayDistance, Color.red);
@@ -214,7 +214,7 @@ public class EnemyAlertedState : IState
     public void WallDetected()
     {
         Debug.Log("WallDetected Funciona");
-        _me.SetPath(_me.CalculateThetaStar(_me.GetMinNode(_me.transform.position), _me.GetMinNode(_point)));
+        _me.SetPath(Pathfinding.CalculateThetaStar(Pathfinding.GetMinNode(_me.transform.position), Pathfinding.GetMinNode(_point)));
         Update = OnPath;
     }
 

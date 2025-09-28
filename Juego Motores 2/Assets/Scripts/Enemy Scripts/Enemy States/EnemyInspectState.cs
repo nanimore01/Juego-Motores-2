@@ -73,7 +73,7 @@ public class EnemyInspectState : IState
     {
         update = OnReturnPatrol;
         _me.OnStopInspect?.Invoke();
-        _me.SetPath(_me.CalculateThetaStar(_me.GetMinNode(_me.transform.position), _me.GetMinNode(_stats.nodePatrol[0].transform.position)));
+        _me.SetPath(Pathfinding.CalculateThetaStar(Pathfinding.GetMinNode(_me.transform.position), Pathfinding.GetMinNode(_stats.nodePatrol[0].transform.position)));
     }
 
     public void OnReturnPatrol()
@@ -135,7 +135,7 @@ public class EnemyInspectState : IState
     {
         //_fsm.ChangeState("Sound Heard");
 
-        if (_me.InLineOfSight(_me.transform.position, _pj))
+        if (Pathfinding.InLineOfSight(_me.transform.position, _pj))
         {
             OnSpotPlayer();
         }

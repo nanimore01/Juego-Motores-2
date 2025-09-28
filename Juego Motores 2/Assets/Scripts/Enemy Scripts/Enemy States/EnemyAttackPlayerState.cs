@@ -79,7 +79,7 @@ public class EnemyAttackPlayerState : IState
 
         if (!_me.InFOV(_pj))
         {
-            _me.SetPath(_me.CalculateThetaStar(_me.GetMinNode(_me.transform.position), _me.GetMinNode(_pj)));
+            _me.SetPath(Pathfinding.CalculateThetaStar(Pathfinding.GetMinNode(_me.transform.position), Pathfinding.GetMinNode(_pj)));
             behaviour = OnLostView;
         }
     }
