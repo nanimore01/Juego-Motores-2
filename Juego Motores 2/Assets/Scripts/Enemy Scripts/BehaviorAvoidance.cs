@@ -52,7 +52,13 @@ public class BehaviorAvoidance
 
             if (leftClear && rightClear) return (desiredDir + lateral * _avoidanceStrength).normalized;
 
+            Debug.DrawRay(origin, desiredDir * rayDistance, Color.red);
+            Debug.DrawRay(origin, lateral, Color.green);
+            Debug.DrawRay(origin, -lateral, Color.blue);
+
             return Vector3.zero;
+
+            
         }
 
         
@@ -62,6 +68,7 @@ public class BehaviorAvoidance
 
     
 }
+
 public interface IGet<out T> 
 {
     T Get();

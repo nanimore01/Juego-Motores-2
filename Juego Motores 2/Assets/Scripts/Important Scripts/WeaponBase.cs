@@ -24,7 +24,7 @@ public abstract class WeaponBase : MonoBehaviour, IWeapon, IGet<IWeapon>
 
     public CountdownTimer _shotTimer;
 
-    public event Action OnReloading;
+    public event Action OnReload;
     public event Action OnShot;
     public event Action<int, int> OnAmmoUsed;
 
@@ -42,6 +42,9 @@ public abstract class WeaponBase : MonoBehaviour, IWeapon, IGet<IWeapon>
         _shotTimer = new CountdownTimer(_shotTime);
         originalPos = transform.localPosition;
         originalRot = transform.localRotation;
+
+        OnAmmoUsed?.Invoke(_actualMag, _totalAmmoStash);
+        
     }
     public void Start()
     {
@@ -118,12 +121,13 @@ public abstract class WeaponBase : MonoBehaviour, IWeapon, IGet<IWeapon>
     {
         _canShot = !_canShot;
         _shotTimer.Reset();
-        OnShot?.Invoke();
+        
         
     }
 
     public void CooldownOn()
     {
+        OnShot?.Invoke();
         _canShot = false;
         _shotTimer.Start();
     }
@@ -206,6 +210,7 @@ public abstract class WeaponBase : MonoBehaviour, IWeapon, IGet<IWeapon>
         if (_totalAmmoStash > 0 && _actualMag < _ammoPerMag)
         {
             _animator.Play("Reload");
+            OnReload?.Invoke();
             isReloading = true;
         }
         else
@@ -255,6 +260,7 @@ public abstract class WeaponBase : MonoBehaviour, IWeapon, IGet<IWeapon>
             _totalAmmoStash = 0;
         }
         isReloading = false;
+        OnAmmoUsed?.Invoke(_actualMag, _totalAmmoStash);
         _animator.Play("Idle");
     }
     public bool IsSubscribed(Action evento, Action metodo)
@@ -272,7 +278,7 @@ public abstract class WeaponBase : MonoBehaviour, IWeapon, IGet<IWeapon>
 
     IWeapon IGet<IWeapon>.Get()
     {
-        throw new NotImplementedException();
+        return this;
     }
 }
 

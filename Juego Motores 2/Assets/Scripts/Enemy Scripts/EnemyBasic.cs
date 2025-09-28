@@ -234,7 +234,6 @@ public class EnemyBasic : Entity, IGet<EnemyStats>, IGet<VoiceLines>
 
     public Node GetMinNode(Vector3 position)
     {
-        print("Funciono");
         Node minNode = null;
         float minDist = Mathf.Infinity;
 
