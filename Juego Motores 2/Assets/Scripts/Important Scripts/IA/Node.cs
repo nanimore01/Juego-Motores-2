@@ -30,7 +30,6 @@ public class Node : MonoBehaviour
 
     public void StopTime(float time)
     {
-        print("Me activo");
         _StopTime.Reset(time);
 
         _StopTime.OnTimerStart += DesactivatePath;

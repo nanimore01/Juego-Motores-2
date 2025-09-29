@@ -50,7 +50,7 @@ public class EnemyAlertedState : IState
         EventManager.player.PlayerPosition += GetPlayerPosition;
         Update = OnPath;
         _me.SetPath(Pathfinding.CalculateThetaStar(Pathfinding.GetMinNode(_me.transform.position), Pathfinding.GetMinNode(_point)));
-        Debug.Log("Punto de sonido: " + _point);
+        DebugPrint.ConsecutiveLog("Punto de sonido: " + _point);
 
         //_behaviorAvoidance.OnGetStuck = WallDetected;
     }
@@ -81,7 +81,7 @@ public class EnemyAlertedState : IState
         {
             if (dir.magnitude <= 1f)
             {
-                Debug.Log("Choque con el nodo");
+                DebugPrint.ConsecutiveLog("Choque con el nodo");
                 _me.path.RemoveAt(0);
             }
         }
@@ -90,7 +90,7 @@ public class EnemyAlertedState : IState
         {
             Vector3 finalDir = _behaviorAvoidance.GetAvoidanceDirection(dir.normalized);
             Debug.DrawRay(_me.transform.position, finalDir);
-            Debug.Log("Direccion Final: " + finalDir);
+            DebugPrint.ConsecutiveLog("Direccion Final: " + finalDir);
             Quaternion targetRot = Quaternion.LookRotation(finalDir);
             _me.transform.rotation = Quaternion.Slerp(
                 _me.transform.rotation,
@@ -121,7 +121,7 @@ public class EnemyAlertedState : IState
 
         Vector3 finalDir = _behaviorAvoidance.GetAvoidanceDirection(dir.normalized);
         Debug.DrawRay(_me.transform.position, finalDir,Color.red, 1f);
-        Debug.Log("Direccion Final: " + finalDir);
+        DebugPrint.ConsecutiveLog("Direccion Final: " + finalDir);
         if (finalDir.sqrMagnitude > .01f)
         {
             Quaternion targetRot = Quaternion.LookRotation(finalDir);
@@ -136,7 +136,7 @@ public class EnemyAlertedState : IState
 
         if (dir.magnitude <= 1f)
         {
-            Debug.Log("Llegue al ruido");
+            DebugPrint.ConsecutiveLog("Llegue al ruido");
             _fsm.ChangeState("Inspect");
         }
 
@@ -213,7 +213,7 @@ public class EnemyAlertedState : IState
 
     public void WallDetected()
     {
-        Debug.Log("WallDetected Funciona");
+        DebugPrint.ConsecutiveLog("WallDetected Funciona");
         _me.SetPath(Pathfinding.CalculateThetaStar(Pathfinding.GetMinNode(_me.transform.position), Pathfinding.GetMinNode(_point)));
         Update = OnPath;
     }
