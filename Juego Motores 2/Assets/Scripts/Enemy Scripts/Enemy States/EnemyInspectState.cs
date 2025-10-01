@@ -48,6 +48,8 @@ public class EnemyInspectState : IState
         EventManager.player.PlayerPosition += GetPlayerPosition;
         _me.OnHeardPlayer += OnHeardPlayer;
         _me.OnSpotedPlayer += OnSpotPlayer;
+
+        
     }
 
     public void OnExit()
@@ -67,6 +69,8 @@ public class EnemyInspectState : IState
         _inpectTimer.Tick(Time.deltaTime);
         _animator.SetFloat("Horizontal", 0);
         _animator.SetFloat("Vertical", 0);
+        _me._rb.velocity = Vector3.zero;
+        
     }
 
     public void OnStopInspect()

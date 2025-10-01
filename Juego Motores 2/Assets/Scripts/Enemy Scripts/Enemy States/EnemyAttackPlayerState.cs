@@ -12,9 +12,9 @@ public class EnemyAttackPlayerState : IState
     VoiceLines _voiceLines => _getVoiceLines.Get();
     IGet<VoiceLines> _getVoiceLines;
     float _rotationSpeed;
-
+    Animator _animator => _stats.animator;
     CountdownTimer _movementTimer;
-
+    Rigidbody _rb => _me._rb;
     Vector3 _pj;
     float _xmovement, _zmovement;
 
@@ -86,7 +86,39 @@ public class EnemyAttackPlayerState : IState
 
     public void OnLostView()
     {
-        
+        Vector3 posNode = new Vector3(_me.path[0].transform.position.x, _me.transform.position.y, _me.path[0].transform.position.z);
+        var dir = posNode - _me.transform.position;
+
+        if (_me.path.Count > 0)
+        {
+            if (dir.magnitude <= 1f)
+            {
+                DebugPrint.ConsecutiveLog("Choque con el nodo");
+                _me.path.RemoveAt(0);
+            }
+        }
+
+        if (dir.sqrMagnitude > .01f)
+        {
+            Vector3 finalDir = _behaviorAvoidance.GetAvoidanceDirection(dir.normalized);
+            Debug.DrawRay(_me.transform.position, finalDir);
+            DebugPrint.ConsecutiveLog("Direccion Final: " + finalDir);
+            Quaternion targetRot = Quaternion.LookRotation(finalDir);
+            _me.transform.rotation = Quaternion.Slerp(
+                _me.transform.rotation,
+                targetRot,
+                _rotationSpeed * Time.deltaTime
+            );
+
+            _me.Move(finalDir);
+            //
+        }
+
+        Vector3 localVel = _me.transform.InverseTransformDirection(_rb.velocity);
+        _animator.SetFloat("Horizontal", Mathf.Clamp(localVel.x, -1, 1));
+        _animator.SetFloat("Vertical", Mathf.Clamp(localVel.z, -1, 1));
+        _me.Horizontal = Mathf.Clamp(localVel.x, -1, 1);
+        _me.Vertical = Mathf.Clamp(localVel.z, -1, 1);
     }
 
     public void GetPlayerPosition(Vector3 player)

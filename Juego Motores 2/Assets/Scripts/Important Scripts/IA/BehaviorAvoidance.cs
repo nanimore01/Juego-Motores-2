@@ -34,7 +34,7 @@ public class BehaviorAvoidance
             // elegimos un offset lateral (cross con up = vector perpendicular en plano XZ)
             Vector3 lateral = Vector3.Cross(Vector3.up, desiredDir).normalized;
 
-            // decidir izquierda o derecha según cuál esté libre
+            // decidir izquierda o derecha segï¿½n cuï¿½l estï¿½ libre
             bool leftClear = !Physics.Raycast(origin, -lateral, 1f, _layerMask);
             bool rightClear = !Physics.Raycast(origin, lateral, 1f, _layerMask);
 

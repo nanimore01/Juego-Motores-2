@@ -111,6 +111,10 @@ public class EnemyPatrolState : IState
         {
             _me.Move(_me.transform.forward);
         }
+        else if(!NextNode.CanContinue)
+        {
+            _me._rb.velocity = Vector3.zero;
+        }
 
         // --- Debug ---
         Debug.DrawRay(_me.transform.position + Vector3.up * 0.5f, _me.transform.forward * rayDistance, Color.red);

@@ -26,7 +26,7 @@ public class EnemyBasic : Entity, IGet<EnemyStats>, IGet<VoiceLines>
     public UnityAction OnStopInspect;
     CountdownTimer _reactionTimer;
     public Rigidbody _rb;
-    float _dampingFactor = 10;
+    [SerializeField]private float _dampingFactor = 10;
 
     [SerializeField]
     private float _dotViewAngle;
@@ -54,6 +54,8 @@ public class EnemyBasic : Entity, IGet<EnemyStats>, IGet<VoiceLines>
         _fsm.CreateState("Patrol", new EnemyPatrolState(this, _fsm, stats, voiceLines));
         _fsm.CreateState("Sound Heard", new EnemyAlertedState(this, _fsm, stats, voiceLines));
         _fsm.CreateState("Inspect", new EnemyInspectState(this));
+        _fsm.CreateState("Attack", new EnemyAttackPlayerState(this));
+
 
         _fsm.ChangeState("Patrol");
         EventManager.player.OnLastPositionHeard += Audition;

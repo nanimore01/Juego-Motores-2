@@ -22,7 +22,7 @@ public class EnemyAlertedState : IState
 
 
     BehaviorAvoidance _behaviorAvoidance;
-
+    BehaviourOnPath _behaviourOnPath;
     public EnemyAlertedState(EnemyBasic me, FSM fsm, EnemyStats stats, VoiceLines voiceLines)
     {
         _me = me;
@@ -37,6 +37,7 @@ public class EnemyAlertedState : IState
         _audioSource = _me.gameObject.GetComponent<AudioSource>();
 
         _behaviorAvoidance = new BehaviorAvoidance(me.transform,me);
+        _behaviourOnPath = new BehaviourOnPath(me.transform, _me.path);
 
         EventManager.player.PlayerPosition += GetPlayerPosition;
         EventManager.player.OnLastPositionHeard += SetPoint;
@@ -51,7 +52,10 @@ public class EnemyAlertedState : IState
         Update = OnPath;
         _me.SetPath(Pathfinding.CalculateThetaStar(Pathfinding.GetMinNode(_me.transform.position), Pathfinding.GetMinNode(_point)));
         DebugPrint.ConsecutiveLog("Punto de sonido: " + _point);
+        _behaviourOnPath.SetAxis((new Vector3(_me.path[0].transform.position.x, _me.transform.position.y, _me.path[0].transform.position.z)));
+        _behaviourOnPath.ChangePath(_me.path);
 
+        _behaviourOnPath.OnFinishedPath += StopedPath;
         //_behaviorAvoidance.OnGetStuck = WallDetected;
     }
 
@@ -68,27 +72,11 @@ public class EnemyAlertedState : IState
 
     public void OnPath()
     {
-        if (_me.path == null || _me.path.Count == 0)
-        {
-            Update = OnFinished;
-            return;
-        }
+        _behaviourOnPath.PathBehaviour();
 
-        Vector3 posNode = new Vector3(_me.path[0].transform.position.x, _me.transform.position.y, _me.path[0].transform.position.z);
-        var dir = posNode - _me.transform.position;
-
-        if (_me.path.Count > 0)
+        if (_behaviourOnPath.dir.sqrMagnitude > .01f)
         {
-            if (dir.magnitude <= 1f)
-            {
-                DebugPrint.ConsecutiveLog("Choque con el nodo");
-                _me.path.RemoveAt(0);
-            }
-        }
-
-        if (dir.sqrMagnitude > .01f)
-        {
-            Vector3 finalDir = _behaviorAvoidance.GetAvoidanceDirection(dir.normalized);
+            Vector3 finalDir = _behaviorAvoidance.GetAvoidanceDirection(_behaviourOnPath.dir.normalized);
             Debug.DrawRay(_me.transform.position, finalDir);
             DebugPrint.ConsecutiveLog("Direccion Final: " + finalDir);
             Quaternion targetRot = Quaternion.LookRotation(finalDir);
@@ -99,7 +87,6 @@ public class EnemyAlertedState : IState
             );
 
             _me.Move(finalDir);
-            //
         }
 
         Vector3 localVel = _me.transform.InverseTransformDirection(_rb.velocity);
@@ -108,10 +95,15 @@ public class EnemyAlertedState : IState
         _me.Horizontal = Mathf.Clamp(localVel.x, -1, 1);
         _me.Vertical = Mathf.Clamp(localVel.z, -1, 1);
 
-        if (_me.path.Count == 0)
-        {
-            Update = OnFinished;
-        }
+        //if (_me.path.Count == 0)
+        //{
+        //    Update = OnFinished;
+        //}
+    }
+
+    public void StopedPath()
+    {
+        Update = OnFinished;
     }
 
     public void OnFinished()
