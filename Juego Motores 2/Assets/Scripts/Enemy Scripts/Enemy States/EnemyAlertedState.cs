@@ -37,7 +37,7 @@ public class EnemyAlertedState : IState
         _audioSource = _me.gameObject.GetComponent<AudioSource>();
 
         _behaviorAvoidance = new BehaviorAvoidance(me.transform,me);
-        _behaviourOnPath = new BehaviourOnPath(me.transform, _me.path);
+        _behaviourOnPath = new BehaviourOnPath(me.transform);
 
         EventManager.player.PlayerPosition += GetPlayerPosition;
         EventManager.player.OnLastPositionHeard += SetPoint;
@@ -49,13 +49,15 @@ public class EnemyAlertedState : IState
         
         EventManager.player.OnLastPositionHeard += SetPoint;
         EventManager.player.PlayerPosition += GetPlayerPosition;
-        Update = OnPath;
-        _me.SetPath(Pathfinding.CalculateThetaStar(Pathfinding.GetMinNode(_me.transform.position), Pathfinding.GetMinNode(_point)));
+        
+        //_me.SetPath(Pathfinding.CalculateThetaStar(Pathfinding.GetMinNode(_me.transform.position), Pathfinding.GetMinNode(_point)));
         DebugPrint.ConsecutiveLog("Punto de sonido: " + _point);
-        _behaviourOnPath.SetAxis((new Vector3(_me.path[0].transform.position.x, _me.transform.position.y, _me.path[0].transform.position.z)));
-        _behaviourOnPath.ChangePath(_me.path);
+        _behaviourOnPath.SetPath(Pathfinding.CalculateThetaStar(Pathfinding.GetMinNode(_me.transform.position), Pathfinding.GetMinNode(_point)));
+
+        
 
         _behaviourOnPath.OnFinishedPath += StopedPath;
+        Update = OnPath;
         //_behaviorAvoidance.OnGetStuck = WallDetected;
     }
 

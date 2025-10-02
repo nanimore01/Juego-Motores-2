@@ -5,7 +5,7 @@ using UnityEngine.Events;
 public class BehaviourOnPath
 {
     Transform _me;
-    public List<Node> path;
+    List<Node> _path = new List<Node>();
 
     Vector3 _axis;
 
@@ -13,10 +13,10 @@ public class BehaviourOnPath
 
     public UnityAction OnFinishedPath;
 
-    public BehaviourOnPath(Transform me, List<Node> path)
+    public BehaviourOnPath(Transform me)
     {
         _me = me;
-        this.path = path;
+        //_axis = new Vector3(_path[0].transform.position.x, _me.transform.position.y, _path[0].transform.position.z);
     }
 
     public void SetAxis(Vector3 axis)
@@ -26,26 +26,32 @@ public class BehaviourOnPath
 
     public void PathBehaviour()
     {
+        if (_path?.Count == 0)
+        {
+            OnFinishedPath?.Invoke();
+        }
+
         dir = _axis - _me.transform.position;
 
-        if (path.Count > 0)
+        if (_path?.Count > 0)
         {
             if (dir.magnitude <= 1f)
             {
                 DebugPrint.ConsecutiveLog("Choque con el nodo");
-                path.RemoveAt(0);
+                _path.RemoveAt(0);
             }
         }
 
-        if (path.Count == 0)
-        {
-            OnFinishedPath?.Invoke();
-        }
+        
     }
 
-    public void ChangePath(List<Node> path)
+    public void SetPath(List<Node> newPath)
     {
-        this.path = path;
-    }
+        _path.Clear();
 
+
+        _path.AddRange(newPath);
+
+        _axis = new Vector3(_path[0].transform.position.x, _me.transform.position.y, _path[0].transform.position.z);
+    }
 }

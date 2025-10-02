@@ -23,6 +23,7 @@ public class EnemyInspectState : IState
     UnityAction update;
 
     BehaviorAvoidance _behaviorAvoidance;
+    BehaviourOnPath _behaviourOnPath;
     public EnemyInspectState(EnemyBasic me)
     {
         _fsm = me._fsm;
@@ -31,6 +32,7 @@ public class EnemyInspectState : IState
 
         _inpectTimer = new CountdownTimer(_stats.inpectTime);
 
+        _behaviourOnPath = new BehaviourOnPath(me.transform);
         _behaviorAvoidance = new BehaviorAvoidance(me.transform, me);
         _rb = _me.gameObject.GetComponent<Rigidbody>();
         EventManager.player.PlayerPosition += GetPlayerPosition;
@@ -77,30 +79,14 @@ public class EnemyInspectState : IState
     {
         update = OnReturnPatrol;
         _me.OnStopInspect?.Invoke();
-        _me.SetPath(Pathfinding.CalculateThetaStar(Pathfinding.GetMinNode(_me.transform.position), Pathfinding.GetMinNode(_stats.nodePatrol[0].transform.position)));
+        _behaviourOnPath.SetPath(Pathfinding.CalculateThetaStar(Pathfinding.GetMinNode(_me.transform.position), Pathfinding.GetMinNode(_stats.nodePatrol[0].transform.position)));
     }
 
     public void OnReturnPatrol()
     {
-        if (_me.path == null || _me.path.Count == 0)
-        {
-            _fsm.ChangeState("Patrol");
-            return;
-        }
-
-        Vector3 posNode = new Vector3(_me.path[0].transform.position.x, _me.transform.position.y, _me.path[0].transform.position.z);
-        var dir = posNode - _me.transform.position;
-
-        if (_me.path.Count > 0)
-        {
-            if (dir.magnitude <= 1f)
-            {
-                Debug.Log("Choque con el nodo");
-                _me.path.RemoveAt(0);
-            }
-        }
-        Vector3 finalDir = _behaviorAvoidance.GetAvoidanceDirection(dir.normalized);
-        if (dir.sqrMagnitude > .01f)
+        _behaviourOnPath.PathBehaviour();
+        Vector3 finalDir = _behaviorAvoidance.GetAvoidanceDirection(_behaviourOnPath.dir.normalized);
+        if (_behaviourOnPath.dir.sqrMagnitude > .01f)
         {
             //Vector3 finalDir = GetAvoidanceDirection(dir.normalized);
 
