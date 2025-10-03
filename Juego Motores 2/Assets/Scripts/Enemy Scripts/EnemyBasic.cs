@@ -102,8 +102,11 @@ public class EnemyBasic : Entity, IGet<EnemyStats>, IGet<VoiceLines>
     {
         _reactionTimer.Stop();
 
-        OnSpotedPlayer.Invoke();
+        OnSpotedPlayer?.Invoke();
+        _fsm.ChangeState("Attack");
     }
+
+    
     public void Move(Vector3 direction)
     {
         _rb.AddForce(direction.normalized * stats.maxVelocity * 10f, ForceMode.Force);
@@ -186,7 +189,8 @@ public struct EnemyStats
     public float inpectTime;
     public float avoidanceStrength;
     public float avoidanceDistance;
-    public float spreadAngle; 
+    public float spreadAngle;
+    public float minDistanceToPlayer;
 
     [Header("Settings")]
     public Node[] nodePatrol;

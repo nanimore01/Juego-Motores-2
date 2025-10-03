@@ -630,12 +630,12 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 128
   <Nodes>k__BackingField:
-  - {fileID: 2066356065}
-  - {fileID: 1473480275}
-  - {fileID: 1193949086}
-  - {fileID: 1965162177}
   - {fileID: 1652368115}
   - {fileID: 146091753}
+  - {fileID: 1193949086}
+  - {fileID: 1965162177}
+  - {fileID: 2066356065}
+  - {fileID: 1473480275}
 --- !u!4 &349569584
 Transform:
   m_ObjectHideFlags: 0
@@ -4633,6 +4633,7 @@ MonoBehaviour:
     avoidanceStrength: 20
     avoidanceDistance: 0.6
     spreadAngle: 30
+    minDistanceToPlayer: 2
     nodePatrol:
     - {fileID: 2066356065}
     - {fileID: 1193949086}
@@ -4649,9 +4650,9 @@ MonoBehaviour:
   Horizontal: 0
   Vertical: 0
   path: []
-  _viewRadius: 5
+  _viewRadius: 10
   _viewAngle: 180
-  _hearRadius: 10
+  _hearRadius: 100
   _rb: {fileID: 1590798142}
   _dampingFactor: 10
   _dotViewAngle: 0.000000059604645

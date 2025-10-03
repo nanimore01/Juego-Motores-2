@@ -219,7 +219,7 @@ public class EnemyAlertedState : IState
 
     public void OnSpotPlayer()
     {
-        Debug.Log("Te detecte");
+        _fsm.ChangeState("Attack");
     }
 }
 

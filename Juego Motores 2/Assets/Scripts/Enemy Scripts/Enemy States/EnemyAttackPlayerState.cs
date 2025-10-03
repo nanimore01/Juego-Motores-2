@@ -11,7 +11,8 @@ public class EnemyAttackPlayerState : IState
     EnemyBasic _me;
     VoiceLines _voiceLines => _getVoiceLines.Get();
     IGet<VoiceLines> _getVoiceLines;
-    float _rotationSpeed;
+    float _rotationSpeed => _stats.rotationSpeed;
+    float _minDistanceToPlayer => _stats.minDistanceToPlayer;
     Animator _animator => _stats.animator;
     CountdownTimer _movementTimer;
     Rigidbody _rb => _me._rb;
@@ -21,6 +22,7 @@ public class EnemyAttackPlayerState : IState
 
     UnityAction behaviour;
 
+    BehaviourOnPath _behaviourOnPath;
     BehaviorAvoidance _behaviorAvoidance;
     public EnemyAttackPlayerState(EnemyBasic me)
     {
@@ -31,6 +33,8 @@ public class EnemyAttackPlayerState : IState
 
 
         _behaviorAvoidance = new BehaviorAvoidance(me.transform, me);
+        _behaviourOnPath = new BehaviourOnPath(me.transform);
+
         var time = Random.Range(0.5f, 3);
         _movementTimer = new CountdownTimer(time);
         _movementTimer.OnTimerStop += ChangeMovement;
@@ -40,6 +44,10 @@ public class EnemyAttackPlayerState : IState
     public void OnEnter()
     {
         EventManager.player.PlayerPosition += GetPlayerPosition;
+
+        behaviour = OnViewPlayer;
+        Debug.Log("Te voy a atacar");
+        _movementTimer.Start();
     }
 
     public void OnExit()
@@ -50,12 +58,21 @@ public class EnemyAttackPlayerState : IState
     public void OnUpdate()
     {
         behaviour.Invoke();
+
+        Vector3 localVel = _me.transform.InverseTransformDirection(_rb.velocity);
+        _animator.SetFloat("Horizontal", Mathf.Clamp(localVel.x, -1, 1));
+        _animator.SetFloat("Vertical", Mathf.Clamp(localVel.z, -1, 1));
+        _me.Horizontal = Mathf.Clamp(localVel.x, -1, 1);
+        _me.Vertical = Mathf.Clamp(localVel.z, -1, 1);
     }
 
     public void ChangeMovement()
     {
-        _xmovement = _pj.x + Random.Range(-1, 2);
-        _zmovement = _pj.z + Random.Range(-1, 2);
+        
+        _xmovement = Random.Range(-1, 2);
+        _zmovement = Random.Range(-1, 2);
+        DebugPrint.Log("Cambio de movimiento ");
+
         var time = Random.Range(0.5f, 3);
         _movementTimer.Reset(time);
         _movementTimer.Start();
@@ -65,42 +82,51 @@ public class EnemyAttackPlayerState : IState
     {
         _movementTimer.Tick(Time.deltaTime);
 
-        Quaternion targetRot = Quaternion.LookRotation(_pj);
+        var PlayerPosition = new Vector3(_pj.x, _me.transform.position.y, _pj.z);
+
+        Quaternion targetRot = Quaternion.LookRotation(PlayerPosition - _me.transform.position);
         _me.transform.rotation = Quaternion.Slerp(
             _me.transform.rotation,
             targetRot,
             _rotationSpeed * Time.deltaTime);
 
-        
-        Vector3 movement = new Vector3(_xmovement,_me.transform.position.y,_zmovement);
+        Vector3 offset = new Vector3(_xmovement, 0, _zmovement);
+        Vector3 movement = (PlayerPosition - _me.transform.position).normalized + offset;
         Vector3 finalDir = _behaviorAvoidance.GetAvoidanceDirection(movement.normalized);
 
-        _me.Move(finalDir);
+        if ((PlayerPosition - _me.transform.position).magnitude > _minDistanceToPlayer * _minDistanceToPlayer)
+        {
+            _me.Move(finalDir);
+        }
+        else
+        {
+            _me.Move(Vector3.zero);
+
+            //Vector3 backDir = -PlayerPosition.normalized;
+            //_me.Move(backDir * 0.5f);
+        }
+
+
+        //Vector3 offset = new Vector3(_xmovement, 0, _zmovement);
+        //Vector3 movement = (PlayerPosition - _me.transform.position).normalized + offset;
+        //Vector3 finalDir = _behaviorAvoidance.GetAvoidanceDirection(movement.normalized);
+
+        //_me.Move(finalDir);
 
         if (!_me.InFOV(_pj))
         {
-            _me.SetPath(Pathfinding.CalculateThetaStar(Pathfinding.GetMinNode(_me.transform.position), Pathfinding.GetMinNode(_pj)));
+            _behaviourOnPath.SetPath(Pathfinding.CalculateThetaStar(Pathfinding.GetMinNode(_me.transform.position), Pathfinding.GetMinNode(_pj)));
             behaviour = OnLostView;
         }
     }
 
     public void OnLostView()
     {
-        Vector3 posNode = new Vector3(_me.path[0].transform.position.x, _me.transform.position.y, _me.path[0].transform.position.z);
-        var dir = posNode - _me.transform.position;
+        _behaviourOnPath.PathBehaviour();
 
-        if (_me.path.Count > 0)
+        if (_behaviourOnPath.dir.sqrMagnitude > .01f)
         {
-            if (dir.magnitude <= 1f)
-            {
-                DebugPrint.ConsecutiveLog("Choque con el nodo");
-                _me.path.RemoveAt(0);
-            }
-        }
-
-        if (dir.sqrMagnitude > .01f)
-        {
-            Vector3 finalDir = _behaviorAvoidance.GetAvoidanceDirection(dir.normalized);
+            Vector3 finalDir = _behaviorAvoidance.GetAvoidanceDirection(_behaviourOnPath.dir.normalized);
             Debug.DrawRay(_me.transform.position, finalDir);
             DebugPrint.ConsecutiveLog("Direccion Final: " + finalDir);
             Quaternion targetRot = Quaternion.LookRotation(finalDir);
@@ -114,16 +140,22 @@ public class EnemyAttackPlayerState : IState
             //
         }
 
-        Vector3 localVel = _me.transform.InverseTransformDirection(_rb.velocity);
-        _animator.SetFloat("Horizontal", Mathf.Clamp(localVel.x, -1, 1));
-        _animator.SetFloat("Vertical", Mathf.Clamp(localVel.z, -1, 1));
-        _me.Horizontal = Mathf.Clamp(localVel.x, -1, 1);
-        _me.Vertical = Mathf.Clamp(localVel.z, -1, 1);
+        //Vector3 localVel = _me.transform.InverseTransformDirection(_rb.velocity);
+        //_animator.SetFloat("Horizontal", Mathf.Clamp(localVel.x, -1, 1));
+        //_animator.SetFloat("Vertical", Mathf.Clamp(localVel.z, -1, 1));
+        //_me.Horizontal = Mathf.Clamp(localVel.x, -1, 1);
+        //_me.Vertical = Mathf.Clamp(localVel.z, -1, 1);
+
+        if (_me.InFOV(_pj))
+        {
+            behaviour = OnViewPlayer;
+        }
     }
 
     public void GetPlayerPosition(Vector3 player)
     {
         _pj = player;
+
     }
 }
 

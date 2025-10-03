@@ -16,6 +16,7 @@ public class EnemyInspectState : IState
     VoiceLines _voiceLines;
 
     float _rotationSpeed => _stats.rotationSpeed;
+    
 
     CountdownTimer _inpectTimer;
 
@@ -43,8 +44,11 @@ public class EnemyInspectState : IState
     public void OnEnter()
     {
         Debug.Log("Inspect Mode");
-        update = OnInspect;
+        _inpectTimer.Reset();
         _inpectTimer.Start();
+
+        update = OnInspect;
+        
         _inpectTimer.OnTimerStop += OnStopInspect;
 
         EventManager.player.PlayerPosition += GetPlayerPosition;
@@ -59,6 +63,7 @@ public class EnemyInspectState : IState
         _me.OnHeardPlayer -= OnHeardPlayer;
         _me.OnSpotedPlayer -= OnSpotPlayer;
         EventManager.player.PlayerPosition -= GetPlayerPosition;
+        _inpectTimer.OnTimerStop -= OnStopInspect;
     }
 
     public void OnUpdate()
@@ -136,7 +141,7 @@ public class EnemyInspectState : IState
     }
     public void OnSpotPlayer()
     {
-        Debug.Log("Te detecte");
+        _fsm.ChangeState("Attack");
     }
 
 }
