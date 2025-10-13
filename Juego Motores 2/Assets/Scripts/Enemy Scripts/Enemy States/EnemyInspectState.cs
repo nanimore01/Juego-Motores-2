@@ -115,10 +115,6 @@ public class EnemyInspectState : IState
         _me.Horizontal = Mathf.Clamp(localVel.x, -1f, 1f);
         _me.Vertical = Mathf.Clamp(localVel.z, -1f, 1f);
 
-        if (_me.path.Count == 0)
-        {
-            _fsm.ChangeState("Patrol");
-        }
     }
 
     public void GetPlayerPosition(Vector3 player)

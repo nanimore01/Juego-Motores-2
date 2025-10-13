@@ -49,7 +49,9 @@ public class EnemyAlertedState : IState
         
         EventManager.player.OnLastPositionHeard += SetPoint;
         EventManager.player.PlayerPosition += GetPlayerPosition;
-        
+
+        _me.OnHeardPlayer += OnHeardPlayer;
+
         //_me.SetPath(Pathfinding.CalculateThetaStar(Pathfinding.GetMinNode(_me.transform.position), Pathfinding.GetMinNode(_point)));
         DebugPrint.ConsecutiveLog("Punto de sonido: " + _point);
         _behaviourOnPath.SetPath(Pathfinding.CalculateThetaStar(Pathfinding.GetMinNode(_me.transform.position), Pathfinding.GetMinNode(_point)));
@@ -65,11 +67,15 @@ public class EnemyAlertedState : IState
     {
         EventManager.player.OnLastPositionHeard -= SetPoint;
         EventManager.player.PlayerPosition -= GetPlayerPosition;
+        _me.OnHeardPlayer -= OnHeardPlayer;
     }
 
     public void OnUpdate()
     {
         Update.Invoke();
+        Vector3 localVel = _me.transform.InverseTransformDirection(_rb.velocity);
+        _animator.SetFloat("Horizontal", Mathf.Clamp(localVel.x, -1, 1));
+        _animator.SetFloat("Vertical", Mathf.Clamp(localVel.z, -1, 1));
     }
 
     public void OnPath()
@@ -91,12 +97,7 @@ public class EnemyAlertedState : IState
             _me.Move(finalDir);
         }
 
-        Vector3 localVel = _me.transform.InverseTransformDirection(_rb.velocity);
-        _animator.SetFloat("Horizontal", Mathf.Clamp(localVel.x, -1, 1));
-        _animator.SetFloat("Vertical", Mathf.Clamp(localVel.z, -1, 1));
-        _me.Horizontal = Mathf.Clamp(localVel.x, -1, 1);
-        _me.Vertical = Mathf.Clamp(localVel.z, -1, 1);
-
+        
         //if (_me.path.Count == 0)
         //{
         //    Update = OnFinished;
@@ -135,10 +136,6 @@ public class EnemyAlertedState : IState
         }
 
         _me.Move(finalDir);
-
-        Vector3 localVel = _me.transform.InverseTransformDirection(_rb.velocity);
-        _animator.SetFloat("Horizontal", Mathf.Clamp(localVel.x, -1, 1));
-        _animator.SetFloat("Vertical", Mathf.Clamp(localVel.z, -1, 1));
     }
 
     public void GetPlayerPosition(Vector3 player)
@@ -157,59 +154,6 @@ public class EnemyAlertedState : IState
             _audioSource.PlayOneShot(_voiceLines.onHeardASound);
             _fsm.ChangeState("Sound Heard");
         }
-    }
-
-    //Vector3 GetAvoidanceDirection(Vector3 desiredDir)
-    //{
-    //    if (desiredDir.sqrMagnitude < 0.0001f)
-    //        return Vector3.zero;
-
-    //    desiredDir.Normalize();
-
-    //    Vector3 origin = _me.transform.position + Vector3.up * 0.6f;
-    //    float rayDistance = _avoidanceDistance;
-    //    float spread = _spreadAngle;
-
-    //    // definimos las 3 direcciones
-    //    Vector3 center = desiredDir;
-    //    Vector3 left = Quaternion.Euler(0, -spread, 0) * desiredDir;
-    //    Vector3 right = Quaternion.Euler(0, spread, 0) * desiredDir;
-
-    //    // --- Raycast central ---
-    //    if (Physics.Raycast(origin, center, rayDistance))
-    //    {
-    //        bool leftClear = !Physics.Raycast(origin, left, rayDistance);
-    //        bool rightClear = !Physics.Raycast(origin, right, rayDistance);
-
-    //        if (leftClear && !rightClear) return (desiredDir + left * 0.7f).normalized;
-    //        if (rightClear && !leftClear) return (desiredDir + right * 0.7f).normalized;
-    //        if (leftClear && rightClear)
-    //        {
-    //            // elige el m�s alineado con la direcci�n deseada
-    //            float dotL = Vector3.Dot(desiredDir, left);
-    //            float dotR = Vector3.Dot(desiredDir, right);
-    //            return (desiredDir + (dotL > dotR ? left : right) * 0.7f).normalized;
-    //        }
-
-    //        OnDetectWall?.Invoke();
-
-    //        return Vector3.zero;
-    //    }
-
-    //    // --- si no hay nada enfrente, segu� normal ---
-    //    return desiredDir;
-
-    //    Debug.DrawRay(origin, center * rayDistance, Color.red);
-    //    Debug.DrawRay(origin, left * rayDistance, Color.yellow);
-    //    Debug.DrawRay(origin, right * rayDistance, Color.yellow);
-
-    //}
-
-    public void WallDetected()
-    {
-        DebugPrint.ConsecutiveLog("WallDetected Funciona");
-        _me.SetPath(Pathfinding.CalculateThetaStar(Pathfinding.GetMinNode(_me.transform.position), Pathfinding.GetMinNode(_point)));
-        Update = OnPath;
     }
 
     public void SetPoint(Vector3 position)

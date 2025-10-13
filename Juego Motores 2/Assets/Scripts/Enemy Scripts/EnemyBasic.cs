@@ -12,11 +12,7 @@ public class EnemyBasic : Entity, IGet<EnemyStats>, IGet<VoiceLines>
     [SerializeField] VoiceLines voiceLines;
     public GameObject POV;
     
-    
     public float Horizontal, Vertical;
-
-
-    public List<Node> path;
 
     [SerializeField] float _viewRadius;
     [SerializeField] float _viewAngle, _hearRadius;
@@ -151,12 +147,7 @@ public class EnemyBasic : Entity, IGet<EnemyStats>, IGet<VoiceLines>
         return false;
     }
     
-    public void SetPath(List<Node> newPath)
-    {
-        path.Clear();
-
-        path.AddRange(newPath);
-    }
+   
 
     
 

@@ -14,6 +14,7 @@ public class BehaviourOnPath
 
     public UnityAction OnFinishedPath;
     public Func<Vector3, Vector3, Vector3> AxisStrategy;
+    public UnityAction OnNullPath;
 
     public BehaviourOnPath(Transform me)
     {
@@ -23,7 +24,14 @@ public class BehaviourOnPath
 
     public void PathBehaviour()
     {
-        if (_path == null || _path.Count == 0)
+        if(_path == null)
+        {
+            OnNullPath?.Invoke();
+            return;
+        }
+
+
+        if ( _path.Count == 0)
         {
             OnFinishedPath?.Invoke();
             return;
@@ -47,6 +55,12 @@ public class BehaviourOnPath
     }
     public void SetPath(List<Node> newPath)
     {
+        if (_path == null)
+        {
+            OnNullPath?.Invoke();
+            return;
+        }
+
         _path.Clear();
         _path.AddRange(newPath);
         

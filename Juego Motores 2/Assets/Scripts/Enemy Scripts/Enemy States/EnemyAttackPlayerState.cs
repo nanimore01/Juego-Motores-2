@@ -18,7 +18,7 @@ public class EnemyAttackPlayerState : IState
     Rigidbody _rb => _me._rb;
     Vector3 _pj;
     float _xmovement, _zmovement;
-
+    Vector3 _point;
 
     UnityAction behaviour;
 
@@ -35,16 +35,20 @@ public class EnemyAttackPlayerState : IState
         _behaviorAvoidance = new BehaviorAvoidance(me.transform, me);
         _behaviourOnPath = new BehaviourOnPath(me.transform);
 
+        _behaviourOnPath.OnNullPath += OnNullPath;
+        _behaviourOnPath.OnFinishedPath += OnNullPath;
+
         var time = Random.Range(0.5f, 3);
         _movementTimer = new CountdownTimer(time);
         _movementTimer.OnTimerStop += ChangeMovement;
         EventManager.player.PlayerPosition += GetPlayerPosition;
+        EventManager.player.OnLastPositionHeard += SetPoint;
     }
 
     public void OnEnter()
     {
         EventManager.player.PlayerPosition += GetPlayerPosition;
-
+        EventManager.player.OnLastPositionHeard += SetPoint;
         behaviour = OnViewPlayer;
         Debug.Log("Te voy a atacar");
         _movementTimer.Start();
@@ -53,6 +57,7 @@ public class EnemyAttackPlayerState : IState
     public void OnExit()
     {
         EventManager.player.PlayerPosition -= GetPlayerPosition;
+        EventManager.player.OnLastPositionHeard -= SetPoint;
     }
 
     public void OnUpdate()
@@ -152,10 +157,40 @@ public class EnemyAttackPlayerState : IState
         }
     }
 
+    public void OnNullPath()
+    {
+        behaviour = SearchLastPlayerPosition;
+    }
+
+    public void SearchLastPlayerPosition()
+    {
+        Vector3 position = new Vector3(_point.x, _me.transform.position.y, _point.z);
+        Vector3 dir = position - _me.transform.position;
+        //_behaviorAvoidance.GetAvoidanceDirection(dir.normalized);
+        Vector3 finalDir = _behaviorAvoidance.GetAvoidanceDirection(dir.normalized);
+        _me.Move(finalDir);
+
+        Quaternion targetRot = Quaternion.LookRotation(position - _me.transform.position);
+        _me.transform.rotation = Quaternion.Slerp(
+            _me.transform.rotation,
+            targetRot,
+            _rotationSpeed * Time.deltaTime);
+
+        if (_me.InFOV(_pj))
+        {
+            behaviour = OnViewPlayer;
+        }
+    }
+
+
     public void GetPlayerPosition(Vector3 player)
     {
         _pj = player;
 
+    }
+    public void SetPoint(Vector3 position)
+    {
+        _point = position;
     }
 }
 
